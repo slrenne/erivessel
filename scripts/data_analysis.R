@@ -18,18 +18,19 @@ db$eribulin <- ifelse(db$treatment %in% c("ED1","ED2"),
 # count the vessels
 v_count <- data.frame(table(db$Scan))
 colnames(v_count) <- c("Scan","count")
-key <- read.delim('input/scan_model_mouse_rx.csv', sep = ";")
+key <- read.delim('input/scan_model_mouse_rx_area.csv', sep = ";")
+key$area.px.2. <- as.integer(key$area.px.2.)
 cdb <- merge(v_count, key, by = "Scan")
 cdb$eribulin <- ifelse(cdb$treatment %in% c("ED1","ED2"), 
                       1L, # had eribulin
                       0L) # did not 
 
-for (i in 1:5) {cdb[,i+2] <- as.factor(cdb[,i+2])}
+for (i in c(1:4,6)) {cdb[,i+2] <- as.factor(cdb[,i+2])}
 
 # modeling the total number of vessels 
 
 dat <- list(
-  V = standardize(cdb$count),
+  V = standardize(cdb$count / cdb$area.px.2.),
   E = as.integer(cdb$eribulin) )
 # centered version of the model
 # m <- ulam(
@@ -67,7 +68,7 @@ plot( NULL ,
       ylab="vessel count",
       xaxt = "n",
       yaxt = "n",
-      main = "Absolute number of vessels")
+      main = "Relative number of vessels")
 ytick <- seq(-1.1, 1, length = 5)
 axis(2, at = ytick, round(de_standard(ytick, dat$V)))
 axis(1, at = 1:2, c("no","yes"))
@@ -79,7 +80,7 @@ pdf("./output/totvasc_contrast.pdf")
 mu_cont <- de_standard(p[,2], dat$V) - de_standard(p[,1], dat$V)
 dens(mu_cont, lwd = 3, 
      xlab = "number of vessels gained with eribulin",
-     main  = "Posterior mean contrast")
+     main  = "Posterior mean contrast", show.zero = TRUE)
 dev.off()
 
 # modeling minor axis 
