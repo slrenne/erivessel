@@ -110,40 +110,6 @@ dev.off()
 
 
 
-
-# Define the layout with 2 rows and 1 column
-
-l.m <- matrix(c(1,2), nrow = 2, ncol = 1)
-
-layout(mat = l.m, heights = c(8, 4))
-
-plot( NULL , 
-      xlab="Eribulin" , 
-      xlim=c(0.5,2.5), 
-      ylim=c(-1.1,1) , 
-      ylab="Normalized Vessels' Density",
-      xaxt = "n",
-      #yaxt = "n",
-      main = "Vessels' Density")
-ytick <- seq(from = -1.5, to = 1.5, length = 5)
-#axis(2, at = ytick, round(de_standard(ytick, dat$V),2))
-axis(1, at = 1:2, c("no","yes"))
-for ( i in 1:2 ) lines( c(i,i) , PI(p[,i]) , lwd=8 , col=col.alpha(2,0.5) )
-points( 1:2 , apply(p,2,mean), lwd=3 , col=2 , pch = 16)
-#dev.off()
-
-# pdf("./output/totvasc_contrast.pdf")
-mu_cont <- p[,2] - p[,1]
-plot(NULL,
-     xlab = "Posterior Contrast",
-     ylab = "Density",
-     main  = "Expected Increase in Vessels'\n Density with Eribulin",
-     ylim = c(0,0.9),
-     xlim = c(-2.2,2))
-dens(mu_cont, lwd = 3, 
-     show.zero = TRUE, add = TRUE)
-dev.off()
-
 # modeling minor axis 
 
 dat <- list(
@@ -191,7 +157,7 @@ plot( NULL ,
       xlab="Eribulin" , 
       xlim=c(0.5,2.5), 
       ylim=c(min(p),max(p)) , 
-      ylab= expression("length  (in " ~ mu * "m)"),
+      ylab= expression("length (in px)"),
       xaxt = "n",
       yaxt = "n",
       main = "Minor length axis")
@@ -205,8 +171,8 @@ dev.off()
 pdf("./output/miL_contrast.pdf")
 mu_cont <- de_standard(p[,2], dat$mL) - de_standard(p[,1], dat$mL)
 dens(mu_cont, lwd = 3, 
-     xlab =  expression("length gained with eribulin (in " ~ mu * "m)"),
-     main  = "Posterior mean contrast minor axis")
+     xlab =  expression("length gained with eribulin (in px)"),
+     main  = "Posterior mean contrast minor axis", show.zero = TRUE)
 dev.off()
 
 
@@ -232,7 +198,7 @@ plot( NULL ,
       xlab="Eribulin" , 
       xlim=c(0.5,2.5), 
       ylim=c(min(p),max(p)) , 
-      ylab= expression("length  (in " ~ mu * "m)"),
+      ylab= expression("length  (in px)"),
       xaxt = "n",
       yaxt = "n",
       main = "Major length axis")
@@ -246,8 +212,8 @@ dev.off()
 pdf("./output/MaL_contrast.pdf")
 mu_cont <- de_standard(p[,2], dat$Ec) - de_standard(p[,1], dat$Ec)
 dens(mu_cont, lwd = 3, 
-     xlab =  expression("length gained with eribulin (in " ~ mu * "m)"),
-     main  = "Posterior mean contrast major axis")
+     xlab =  expression("length gained with eribulin (in px)"),
+     main  = "Posterior mean contrast major axis", show.zero = TRUE)
 dev.off()
 
 # modeling eccentricity
@@ -287,7 +253,7 @@ pdf("./output/Ec_contrast.pdf")
 mu_cont <- de_standard(p[,2], dat$Ec) - de_standard(p[,1], dat$Ec)
 dens(mu_cont, lwd = 3, 
      xlab =  "Eccentricity gained with eribulin",
-     main  = "Posterior mean contrast minor axis")
+     main  = "Posterior mean contrast minor axis", show.zero = TRUE)
 dev.off()
 
 
@@ -313,7 +279,7 @@ plot( NULL ,
       xlab="Eribulin" , 
       xlim=c(0.5,2.5), 
       ylim=c(min(p),max(p)) , 
-      ylab= expression("Area  (in " ~ mu * "m" ^2*")"),
+      ylab= expression("Area  (in px" ^2*")"),
       xaxt = "n",
       yaxt = "n",
       main = "Vessels' Area")
@@ -327,7 +293,7 @@ dev.off()
 pdf("./output/A_contrast.pdf")
 mu_cont <- de_standard(p[,2], dat$A) - de_standard(p[,1], dat$A)
 dens(mu_cont, lwd = 3, 
-     xlab =  expression("Area gained with eribulin (in " ~ mu * "m" ^2*")"),
-     main  = "Posterior mean contrast area")
+     xlab =  expression("Area gained with eribulin (in px" ^2*")"),
+     main  = "Posterior mean contrast area", show.zero = TRUE)
 dev.off()
 
