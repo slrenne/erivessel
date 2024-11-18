@@ -15,6 +15,12 @@ db$eribulin <- ifelse(db$treatment %in% c("ED1","ED2"),
                       1L, # had eribulin
                       0L) # did not 
 
+db$eribulin2 <- ifelse(db$treatment == "ED1",
+                      1L,ifelse(db$treatment == "ED2",
+                                2L, # had eribulin
+                                0L)) # did not 
+
+
 # count the vessels
 v_count <- data.frame(table(db$Scan))
 colnames(v_count) <- c("Scan","count")
@@ -60,27 +66,82 @@ m <- ulam(
 
 p <- link(m, data = list(E = 1:2))
 
+mu_cont <- p[,2] - p[,1]
+
+
+
 pdf("./output/totvasc.pdf")
+# Set up a 1x2 layout, where the first plot is on the left and the second is on the right
+l.m <- matrix(c(1, 2), nrow = 1, ncol = 2) # 1 row, 2 columns
+layout(mat = l.m, widths = c(10, 4))          # adjust widths as desired
+
+# First plot (left side)
+plot(NULL, 
+     xlab = "Eribulin", 
+     xlim = c(0.5, 2.5), 
+     ylim = c(-1.1, 1), 
+     ylab = "Normalized Vessels' Density",
+     xaxt = "n",
+     main = "Vessels' Density")
+ytick <- seq(from = -1.5, to = 1.5, length = 5)
+axis(1, at = 1:2, labels = c("no", "yes"))
+for (i in 1:2) lines(c(i, i), PI(p[, i]), lwd = 8, col = col.alpha(2, 0.5))
+points(1:2, apply(p, 2, mean), lwd = 3, col = 2, pch = 16)
+
+# Second plot (right side), rotated by 90 degrees
+par(mar = c(5, 5, 4, 2) + 0.1) # adjust margins if needed
+# Rotate the second plot by setting `par` to flip coordinates
+par(srt = 90) # angle text
+a <- density(mu_cont,adjust = 0.5)
+
+plot(a$y, a$x, type = 'l', lwd = 4,
+     xlab = "Density", 
+     ylab = "Expected Increase in Vessels'\n Density with Eribulin",
+     main  = "",
+     xlim = c(0, 0.9),
+     ylim = c(-2.2, 2))
+abline(h = 0, lty = 2)
+
+
+# Close any open graphics device
+dev.off()
+
+
+
+
+
+
+# Define the layout with 2 rows and 1 column
+
+l.m <- matrix(c(1,2), nrow = 2, ncol = 1)
+
+layout(mat = l.m, heights = c(8, 4))
+
 plot( NULL , 
       xlab="Eribulin" , 
       xlim=c(0.5,2.5), 
       ylim=c(-1.1,1) , 
-      ylab="vessel count",
+      ylab="Normalized Vessels' Density",
       xaxt = "n",
-      yaxt = "n",
-      main = "Relative number of vessels")
-ytick <- seq(-1.1, 1, length = 5)
-axis(2, at = ytick, round(de_standard(ytick, dat$V)))
+      #yaxt = "n",
+      main = "Vessels' Density")
+ytick <- seq(from = -1.5, to = 1.5, length = 5)
+#axis(2, at = ytick, round(de_standard(ytick, dat$V),2))
 axis(1, at = 1:2, c("no","yes"))
 for ( i in 1:2 ) lines( c(i,i) , PI(p[,i]) , lwd=8 , col=col.alpha(2,0.5) )
 points( 1:2 , apply(p,2,mean), lwd=3 , col=2 , pch = 16)
-dev.off()
+#dev.off()
 
-pdf("./output/totvasc_contrast.pdf")
-mu_cont <- de_standard(p[,2], dat$V) - de_standard(p[,1], dat$V)
+# pdf("./output/totvasc_contrast.pdf")
+mu_cont <- p[,2] - p[,1]
+plot(NULL,
+     xlab = "Posterior Contrast",
+     ylab = "Density",
+     main  = "Expected Increase in Vessels'\n Density with Eribulin",
+     ylim = c(0,0.9),
+     xlim = c(-2.2,2))
 dens(mu_cont, lwd = 3, 
-     xlab = "number of vessels gained with eribulin",
-     main  = "Posterior mean contrast", show.zero = TRUE)
+     show.zero = TRUE, add = TRUE)
 dev.off()
 
 # modeling minor axis 
