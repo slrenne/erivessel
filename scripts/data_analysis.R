@@ -20,6 +20,17 @@ db$eribulin2 <- ifelse(db$treatment == "ED1",
                                 2L, # had eribulin
                                 0L)) # did not 
 
+# pixel size 0.25 um 
+p_s <- 0.25
+
+#as.factor
+pdb <- db
+for(i in c(9,10,12)){pdb[,i] <- as.numeric(as.factor(pdb[,i]))}
+pdb <- pdb[,c(4:10,12)]
+
+png("./output/pairs.png", width = 800, height = 800)
+pairs(pdb, lower.panel = NULL, col = col.alpha(2))
+dev.off()
 
 # count the vessels
 v_count <- data.frame(table(db$Scan))
@@ -114,7 +125,7 @@ dev.off()
 
 dat <- list(
   mL = standardize(db$axis_minor_length),
-  E = db$eribulin + 1L )
+  E = db$eribulin2 + 1L )
 
 m <- quap(
   alist(
