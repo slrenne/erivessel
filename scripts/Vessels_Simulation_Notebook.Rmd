@@ -1,0 +1,245 @@
+---
+title: "3D Vasculature Simulation"
+output: html_notebook
+---
+
+1.  **Load Necessary Libraries**
+
+```{r}
+library(rgl)
+library(plotrix)  # For drawing circles and ellipses
+library(plotly)   # For interactive 2D plots
+```
+
+2.  **Define 3D Space Boundaries**
+
+    Here, we define the boundaries of the 3D space where the vasculature will be simulated. The space is a cube with limits from `-10` to `10` along the X, Y, and Z axes.
+
+```{R}
+# Clear any previous plots
+clear3d()
+
+# Define a 3D space as boundaries
+limi <- 10
+space_x <- c(-limi, limi)  # X bounds
+space_y <- c(-limi, limi)  # Y bounds
+space_z <- c(-limi, limi)  # Z bounds
+```
+
+3.  **Function to Calculate Daughter Diameters**
+
+    This function calculates the diameter of daughter branches based on **Murray's Law**, which describes the relationship between parent and daughter vessel diameters in biological systems. The scaling factor is adjusted to `0.2` for better visualization.
+
+    ![](images/clipboard-507608548.png){width="311"}
+
+```{r}
+# Function to calculate daughter diameters based on Murray's Law
+calculate_daughter_diameters1 <- function(parent_diameter, splitting=2, scaling=2) {
+  daughter_diameter <- parent_diameter * (1/splitting*scaling)^(1/3)  # Proportional scaling, NOTE I CHANGED 0.5 to 0.2 to see it better
+  return(daughter_diameter)
+}
+
+# Function to calculate daughter diameters based on Murray's Law
+calculate_daughter_diameters <- function(parent_diameter) {
+  daughter_diameter <- parent_diameter * (0.2)^(1/3)  # Proportional scaling, NOTE I CHANGED 0.5 to 0.2 to see it better
+  return(daughter_diameter)
+}
+```
+
+4.  **Recursive Function to Simulate Vascular-Like Branches**
+
+    This recursive function simulates the growth of vascular-like branches in 3D space. It starts from a given point and generates branches with random angles and lengths, ensuring they stay within the defined boundaries. Each branch's diameter is calculated using the `calculate_daughter_diameters` function.
+
+```{r}
+
+# Initialize a list to store all branches
+vasculature_branches <- list()
+
+# Recursive function to simulate vascular-like branches
+draw_vasculature_dense <- function(x, y, z, length, angle_x, angle_y, depth, 
+                                   shrink = 0.75, angle_variation = 25, space_limits, 
+                                   parent_diameter = 2) {
+  if (depth == 0 || length < 0.3) return()
+  
+  x_end <- x + length * sin(angle_y * pi / 180) * cos(angle_x * pi / 180)
+  y_end <- y + length * sin(angle_y * pi / 180) * sin(angle_x * pi / 180)
+  z_end <- z + length * cos(angle_y * pi / 180)
+  
+  if (x_end < space_limits$x[1] || x_end > space_limits$x[2] || 
+      y_end < space_limits$y[1] || y_end > space_limits$y[2] || 
+      z_end < space_limits$z[1] || z_end > space_limits$z[2]) {
+    return()
+  }
+  
+  diameter <- parent_diameter
+  daughter_diameter <- calculate_daughter_diameters(diameter)
+  
+  segments3d(rbind(c(x, y, z), c(x_end, y_end, z_end)), col = "red", lwd = diameter)
+  
+  vasculature_branches <<- append(vasculature_branches, list(rbind(c(x, y, z), c(x_end, y_end, z_end))))
+  
+  for (i in 1:4) {  
+    new_angle_x <- angle_x + rnorm(1, 0, angle_variation / 3)  
+    new_angle_y <- angle_y + rnorm(1, 0, angle_variation / 3)
+    draw_vasculature_dense(x_end, y_end, z_end, length * shrink, new_angle_x, new_angle_y, 
+                           depth - 1, shrink, angle_variation, space_limits, daughter_diameter)
+  }
+}
+```
+
+5.  **Initialize 3D Plot and Draw Vasculature**
+
+    This section initializes the 3D plot, sets the background color, and starts drawing the vasculature. The `draw_vasculature_dense` function is called with initial parameters to generate the 3D structure.
+
+```{r}
+
+space_limits <- list(x = space_x, y = space_y, z = space_z)
+
+open3d()
+bg3d("white")  
+view3d(theta = 30, phi = 40, zoom = 0.7)  
+
+initial_length <- 3
+initial_depth <- 6 
+
+axes3d()
+title3d("Dense 3D Tissue Vasculature Simulation", "", "", "", "")
+
+draw_vasculature_dense(0, 0, 0, initial_length, angle_x = 0, angle_y = 90, 
+                       depth = initial_depth, space_limits = space_limits, parent_diameter = 5)
+```
+
+6.  **Function to Compute Intersection of a Line Segment with a Plane**
+
+    This function calculates the intersection point of a line segment (representing a branch) with a plane. It uses vector mathematics to determine if and where the intersection occurs.
+
+```{r}
+
+# Function to compute intersection of a line segment with a plane
+intersect_plane <- function(p1, p2, plane_normal, plane_point) {
+  line_vec <- p2 - p1
+  dot_prod <- sum(plane_normal * line_vec)
+  
+  if (abs(dot_prod) < 1e-6) {
+    return(NULL)  
+  }
+  
+  t <- sum(plane_normal * (plane_point - p1)) / dot_prod
+  if (t < 0 || t > 1) {
+    return(NULL)  
+  }
+  
+  intersection_point <- p1 + t * line_vec
+  return(intersection_point)
+}
+```
+
+7.  **Generate a Plane Intersecting the Vasculature**
+
+    This function generates a random plane that intersects the vasculature. The plane is defined by a normal vector and a point on the plane.
+
+```{r}
+
+# Function to generate a plane intersecting the vasculature
+generate_intersecting_plane <- function(vasculature_branches) {
+  all_points <- do.call(rbind, vasculature_branches)
+  center_point <- colMeans(all_points, na.rm = TRUE)
+  
+  plane_normal <- rnorm(3)
+  plane_normal <- plane_normal / sqrt(sum(plane_normal^2))  
+  
+  plane_point <- center_point
+  
+  return(list(normal = plane_normal, point = plane_point))
+}
+
+random_plane <- generate_intersecting_plane(vasculature_branches)
+plane_normal <- random_plane$normal
+plane_point <- random_plane$point
+
+cat("Plane equation: ", plane_normal[1], "x + ", plane_normal[2], "y + ", plane_normal[3], "z = ", 
+    sum(plane_normal * plane_point), "\n")
+```
+
+8.  **Compute Intersections and Visualize**
+
+    This section computes the intersection points of the vasculature branches with the generated plane. The intersections are visualized as green spheres in the 3D plot.
+
+```{r}
+
+intersections <- list()
+for (branch in vasculature_branches) {
+  p1 <- branch[1, ]
+  p2 <- branch[2, ]
+  intersection <- intersect_plane(p1, p2, plane_normal, plane_point)
+  if (!is.null(intersection)) {
+    intersections <- append(intersections, list(intersection))
+  }
+}
+
+cat("Number of intersections: ", length(intersections), "\n")
+
+planes3d(plane_normal[1], plane_normal[2], plane_normal[3], -sum(plane_normal * plane_point), 
+         col = "blue", alpha = 0.5)
+
+if (length(intersections) > 0) {
+  for (point in intersections) {
+    spheres3d(point[1], point[2], point[3], radius = 0.02, col = "green")
+  }
+}
+
+rgl::rgl.bringtotop()
+```
+
+9.  **Create an Interactive 2D Plot**
+
+    This section creates an interactive 2D plot of the intersection points using `plotly`. The plot represents a 2D histological slice of the 3D vasculature.
+
+```{r}
+
+# Fix per get_plane_axes()
+get_plane_axes <- function(normal) {
+  if (length(normal) != 3 || any(is.na(normal))) {
+    stop("Errore: il vettore normale non è valido.")
+  }
+  
+  normal <- normal / sqrt(sum(normal^2))
+  
+  ref_vector <- c(1, 0, 0)
+  if (abs(sum(normal * ref_vector)) > 0.9) {  
+    ref_vector <- c(0, 1, 0)
+  }
+  
+  u <- crossprod(matrix(ref_vector, ncol = 3), matrix(normal, ncol = 3))
+  u <- as.vector(u) / sqrt(sum(u^2))
+  
+  v <- crossprod(matrix(normal, ncol = 3), matrix(u, ncol = 3))
+  v <- as.vector(v) / sqrt(sum(v^2))
+  
+  return(list(u = u, v = v))
+}
+
+# Create an interactive 2D plot
+if (length(intersections) > 0) {
+  intersection_points <- do.call(rbind, intersections)
+  x <- intersection_points[, 1]
+  y <- intersection_points[, 2]
+  
+  p <- plot_ly() %>%
+    add_markers(x = x, y = y, marker = list(size = 10, color = "red"), name = "Intersections")
+  
+  for (point in intersections) {
+    angle <- atan2(plane_normal[2], plane_normal[1]) * 180 / pi
+    p <- p %>%
+      add_trace(x = point[1], y = point[2], type = "scatter", mode = "lines",
+                line = list(color = "blue", width = 2),
+                name = "Ellipse", showlegend = FALSE)
+  }
+  
+  p %>% layout(title = "2D Histological Slice", 
+               xaxis = list(title = "X"), 
+               yaxis = list(title = "Y"))
+} else {
+  cat("No intersections found. Try increasing the vasculature density.\n")
+}
+```
