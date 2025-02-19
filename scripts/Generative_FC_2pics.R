@@ -64,6 +64,8 @@ N_points <- nrow(data_combined)
 
 # Compute distance matrix
 m <- as.matrix(dist(data_combined, method = "euclidean"))
+m1 <- as.matrix(dist(mat1, method = "euclidean"))
+m2 <- as.matrix(dist(mat2, method = "euclidean"))
 
 # Simulate prior kernel curves
 p.etasq <- rexp(N_points, 2)[1:20]
@@ -88,17 +90,69 @@ sim_gp <- MASS::mvrnorm(1, mu = rep(0, N_points), Sigma = K)
 
 # Generate observed values
 sim_y <- rnorm(N_points, mean = sim_gp + beta * x_combined, sd = 1)
+sim_y1 <- rnorm(400, sim_gp + beta * x1)
+sim_y2 <- rnorm(400, sim_gp + beta * x2)
 
 # Plot simulated MALDI images
 pdf(file.path(out_folder, "simulated_maldi_combined.pdf"))
 par(mfrow = c(1, 2))
-image(matrix(sim_y[1:(n * n)], nrow = n, ncol = n, byrow = TRUE),
+plot(matrix(sim_y[1:(n * n)], nrow = n, ncol = n, byrow = TRUE),
       col = viridis, main = "Simulated MALDI - Image 1",
       xlab = "", ylab = "", axes = FALSE)
-image(matrix(sim_y[(n * n + 1):(2 * n * n)], nrow = n, ncol = n, byrow = TRUE),
+plot(matrix(sim_y[(n * n + 1):(2 * n * n)], nrow = n, ncol = n, byrow = TRUE),
       col = viridis, main = "Simulated MALDI - Image 2",
       xlab = "", ylab = "", axes = FALSE)
 dev.off()
+
+# Fit Gaussian Process model 2 image separate 
+
+# Prepare data 
+dat_list <- list(
+  y1 = sim_y1,
+  y2 = sim_y2,
+  x1 = x1,
+  x2 = x2
+  # Dmat1 = m1,
+  # Dmat2 = m2,
+  # N = 20 # side of the matrix
+)
+
+
+GP2 <- ulam(
+  alist(
+    # GP image 1
+    y1 ~ normal(mu1, sigma), 
+    mu1 <- a + b * x1,
+    #matrix[N, N]:K1 <- cov_GPL2(Dmat1, etasq, rho, 0.01), 
+    # GP image 2
+    y2 ~ normal(mu2, sigma), 
+    mu2 <- a + b * x2,
+    #matrix[N, N]:K2 <- cov_GPL2(Dmat2, etasq, rho, 0.01),
+    a ~ normal(0, 1),
+    b ~ normal(0, 0.5),
+    sigma ~ dexp(1)
+    #etasq ~ dexp(2),
+    #rho ~ dexp(0.5)
+  ),   data = dat_list, chains = 4, cores = 4 )
+
+GP2 <- ulam(
+  alist(
+    # GP image 1
+    y1 ~ normal(mu, 0), 
+    mu <- a + b * x1,
+    #matrix[N, N]:K1 <- cov_GPL2(Dmat1, etasq, rho, 0.01), 
+    # GP image 2
+    y2 ~ normal(mu, 0), 
+    mu <- a + b * x2,
+    #matrix[N, N]:K2 <- cov_GPL2(Dmat2, etasq, rho, 0.01),
+    a ~ normal(0, 1),
+    b ~ normal(0, 0.5),
+    #etasq ~ dexp(2),
+    #rho ~ dexp(0.5)
+  ),   data = dat_list, chains = 1, cores = 1, iter = 100 )
+
+
+
 
 # Prepare data 
 dat_list <- list(
@@ -120,7 +174,7 @@ GP <- ulam(
     etasq ~ dexp(2),
     rho ~ dexp(0.5)
   ),
-  data = dat_list, chains = 4, cores = 4, iter = 1000
+  data = dat_list, chains = 4, cores = 4, iter = 1000, threads = 2
 )
 
 precis(GP)
