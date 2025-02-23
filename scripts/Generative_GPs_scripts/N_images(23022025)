@@ -22,10 +22,10 @@ test_function <- function(n, circles) {
 }
 
 # -------------------------
-# NUMBER OF IMAGES
+# 1. SIMULATION SETUP
 # -------------------------
-N_img <- 5        # Number of images (change this value to simulate N images)
-n <- 20          
+N_img <- 5        # Number of images ---> funziona con 2, 3, 4, 5, 6 e credo con di +
+n <- 20           # Matrix dimensions (n x n)
 
 circles_list <- vector("list", N_img)
 for(i in 1:N_img) {
@@ -58,7 +58,7 @@ for(i in 1:N_img) {
   xs[[i]] <- as.vector(t(mats[[i]]))
 }
 
-# Plot the vector forms (one panel per image)
+# Plot the vector forms 
 par(mfrow = c(1, N_img))
 for(i in 1:N_img) {
   plot(xs[[i]], main = paste("Vector form - Image", i), type = "l")
@@ -74,7 +74,7 @@ data_combined <- do.call(rbind, grids)
 colnames(data_combined) <- c("X_Coordinate", "Y_Coordinate")
 N_points <- nrow(data_combined)
 
-# Compute the global distance matrix (used for the latent GP simulation)
+# Compute the global distance matrix
 m_global <- as.matrix(dist(data_combined, method = "euclidean"))
 
 # Compute individual distance matrices for each image
@@ -97,20 +97,20 @@ for(i in 1:20)
   curve(p.etasq[i] * exp(-p.rhosq[i] * x^2), add = TRUE, lwd = 6, col = col.alpha(2, 0.5))
 
 # -------------------------
-# SIMULATE OBSERVATIONS
+# SIMULATE LATENT GP & OBSERVATIONS
 # -------------------------
+# Set GP parameters (actual values used in simulation)
 beta <- 5
 etasq <- 2
 rho <- sqrt(0.5)
 
-# Generate covariance matrix over all points 
+# Generate covariance matrix over all points
 K <- etasq * exp(-0.5 * ((m_global / rho)^2)) + diag(1e-9, N_points)
 
-# Sample latent GP values
 sim_gp <- MASS::mvrnorm(1, mu = rep(0, N_points), Sigma = K)
 
 
-# Generate observed values for each image by slicing sim_gp appropriately
+# Generate observed values 
 sim_y <- vector("list", N_img)
 for(i in 1:N_img) {
   idx <- ((i-1)*n*n + 1):(i*n*n)
@@ -127,8 +127,9 @@ for(i in 1:N_img) {
 }
 
 # -------------------------
-# PREPARE DATA
+# PREPARE DATA FOR FITTING
 # -------------------------
+# We build a data list that contains, for each image, its y vector, x vector, and distance matrix.
 dat_list <- list(N = n*n)  # number of points per image
 for(i in 1:N_img) {
   dat_list[[ paste0("y", i) ]] <- sim_y[[i]]
@@ -139,7 +140,8 @@ for(i in 1:N_img) {
 # -------------------------
 # DYNAMICALLY BUILD THE MODEL SPECIFICATION
 # -------------------------
-
+# We construct a model specification that contains, for each image, a likelihood statement
+# and the corresponding GP covariance.
 model_code <- "alist(\n"
 for(i in 1:N_img) {
   model_code <- paste0(model_code,
@@ -147,7 +149,6 @@ for(i in 1:N_img) {
                        "  mu", i, " <- a + b * x", i, ",\n",
                        "  matrix[N, N]:K", i, " <- cov_GPL2(Dmat", i, ", etasq, rho, 0.01),\n")
 }
-# Append shared priors for common parameters
 model_code <- paste0(model_code,
                      "  a ~ normal(0, 1),\n",
                      "  b ~ normal(0, 0.5),\n",
@@ -161,9 +162,9 @@ cat(model_code)
 model_list <- eval(parse(text = model_code))
 
 # -------------------------
-# FIT THE MODEL 
+#  FIT THE MODEL USING ULAM
 # -------------------------
-GP_N <- ulam(model_list, data = dat_list, chains = 4, cores = 4, iter = 250) #even with low iterations my R sessions keep aborting.....
+GP_N <- ulam(model_list, data = dat_list, chains = 4, cores = 4, iter = 250)    #a few but it compiles !!!
 
 print(precis(GP_N))
 post <- extract.samples(GP_N)
@@ -171,6 +172,7 @@ post <- extract.samples(GP_N)
 # -------------------------
 # PLOT KERNEL COMPARISON
 # -------------------------
+# Plot prior curves, the actual kernel, and estimated kernel curves 
 par(mfrow = c(1, 1))
 plot(NULL, xlim = c(0, max(m_global)/3), ylim = c(0, 2),
      xlab = "pixel distance", ylab = "covariance",
