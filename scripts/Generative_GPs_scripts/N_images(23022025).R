@@ -21,6 +21,15 @@ test_function <- function(n, circles) {
   return(mat)
 }
 
+get_mfrow <- function(n) {
+  # Find the best row-column combination
+  nr <- floor(sqrt(n))
+  nc <- ceiling(n / nr)
+  
+  return(c(nr, nc))
+}
+
+
 # -------------------------
 # 1. SIMULATION SETUP
 # -------------------------
@@ -42,12 +51,19 @@ for(i in 1:N_img) {
 }
 
 # Plot vessel images
-par(mfrow = c(1, N_img))
+# we will use turbo for plotting vessels and viridis for maldi
+mfrow.p <- get_mfrow(N_img)
+s_f <- 3 # scaling factor
+pdf("output/sim_vessels.pdf", 
+    height = mfrow.p[1] * s_f, 
+    width = mfrow.p[2] * s_f)
+par(mfrow = mfrow.p)
 for(i in 1:N_img) {
-  plot(mats[[i]], col = viridis, key = NULL,
+  plot(mats[[i]], col = turbo, key = NULL,
        main = paste("Simulated vessels", i),
        xlab = "", ylab = "", axis.col = NULL, axis.row = NULL)
 }
+dev.off()
 
 # -------------------------
 #  VECTORIZE & COORDINATE GRIDS
@@ -69,6 +85,7 @@ grids <- vector("list", N_img)
 for(i in 1:N_img) {
   grids[[i]] <- expand.grid(X = (1:n) + (i-1)*n, Y = 1:n)
 }
+
 # Combine all grids to form the global data set
 data_combined <- do.call(rbind, grids)
 colnames(data_combined) <- c("X_Coordinate", "Y_Coordinate")
@@ -91,7 +108,7 @@ p.etasq <- rexp(N_points, 2)[1:20]
 p.rhosq <- rexp(N_points, 0.5)[1:20]
 
 par(mfrow = c(1, 1))
-plot(NULL, xlim = c(0, max(m_global)/3), ylim = c(0, 1),
+plot(NULL, xlim = c(0, max(m_global)*2), ylim = c(0, 1),
      xlab = "pixel distance", ylab = "covariance", main = "Prior simulation")
 for(i in 1:20)
   curve(p.etasq[i] * exp(-p.rhosq[i] * x^2), add = TRUE, lwd = 6, col = col.alpha(2, 0.5))
