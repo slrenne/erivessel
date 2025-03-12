@@ -183,7 +183,7 @@ for folder in folders:
       ```
      Example output: a binary image, created using a mask, where all vessels are represented in white and the background is shown in black.
    
-     <img src="/Segmented.png" alt="Binary image output after segmentation and morphological operations" width="300"/>
+     <img src="output/Segmented.png" alt="Binary image output after segmentation and morphological operations" width="300"/>
      
       To enhance interpretability - because seeing is believing - contour detection outlines vessel boundaries as an overlay on the original images. Nothing beats a well-labeled, highlighted image that speaks for itself, showcasing exactly what you've extracted.
       ```python
@@ -196,7 +196,7 @@ for folder in folders:
       ```
       Example output: the original histological image, with vessel countours highlighted in green.
      
-      <img src="/Contoured.jpg" alt="Histological image with vessel contours overlayed" width="300"/>
+      <img src="output/Contoured.jpg" alt="Histological image with vessel contours overlayed" width="300"/>
        
    - #### 3.5 Feature extraction
      Great, you now have segmented vessels, but science demands numbers, not just pretty pictures. To obtain more information on vessel morphology, quantitative features are extracted using `regionprops_table` from `skimage.measure`. These properties include:
