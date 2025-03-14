@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+	<meta name="generator" content="Hugo 0.145.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  Spatial Vessel Analysis
+  #
+
+
+  Overview
+  #
+
+The following pipeline offers a robust, reproducible, and scalable solution for extracting vessel-related features from histological images. Accurate vascular network segmentation provides key insights into vascular conformation and remodeling. Additionally, this pipeline also correlates vascular structures with drug distribution. While particularly relevant in oncology for characterizing the tumor microenvironment, it may also be applied to other diseases where vascular alterations are of paramount importance, including those involving inflammation, fibrosis, and microvascular dysfunction. By enhancing our understanding of vascular-mediated disease progression and treatment delivery, this approach supports both research and clinical decision-making.">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/">
+  <meta property="og:site_name" content="Code Documentation">
+  <meta property="og:title" content="Spatial Vessel Analysis">
+  <meta property="og:description" content="Spatial Vessel Analysis # Overview # The following pipeline offers a robust, reproducible, and scalable solution for extracting vessel-related features from histological images. Accurate vascular network segmentation provides key insights into vascular conformation and remodeling. Additionally, this pipeline also correlates vascular structures with drug distribution. While particularly relevant in oncology for characterizing the tumor microenvironment, it may also be applied to other diseases where vascular alterations are of paramount importance, including those involving inflammation, fibrosis, and microvascular dysfunction. By enhancing our understanding of vascular-mediated disease progression and treatment delivery, this approach supports both research and clinical decision-making.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="website">
+<title>Spatial Vessel Analysis | Code Documentation</title>
+<link rel="icon" href="/favicon.png" >
+<link rel="manifest" href="/manifest.json">
+<link rel="canonical" href="http://localhost:1313/">
+<link rel="stylesheet" href="/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous"><link rel="alternate" type="application/rss+xml" href="http://localhost:1313/index.xml" title="Code Documentation" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><span>Code Documentation</span>
+  </a>
+</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Spatial Vessel Analysis</h3>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#step-by-step-guide">Step-by-Step Guide</a>
+      <ul>
+        <li><a href="#1-prepare-your-data">1. <strong>Prepare Your Data</strong></a></li>
+        <li><a href="#2-visualize-the-slide-in-qupath--perform-tiling">2. <strong>Visualize the Slide in QuPath &amp; Perform Tiling</strong></a></li>
+        <li><a href="#3-segment-vessels-and-extract-features-in-python">3. <strong>Segment Vessels and Extract Features in Python</strong></a></li>
+        <li><a href="#4-infer-drug-distributions">4. <strong>Infer Drug Distributions</strong></a></li>
+        <li><a href="#5-interpret-your-data">5. <strong>Interpret Your Data</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#contributors">Contributors</a></li>
+    <li><a href="#citation">Citation</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h1 id="spatial-vessel-analysis">
+  Spatial Vessel Analysis
+  <a class="anchor" href="#spatial-vessel-analysis">#</a>
+</h1>
+<h2 id="overview">
+  Overview
+  <a class="anchor" href="#overview">#</a>
+</h2>
+<p>The following pipeline offers a robust, reproducible, and scalable solution for extracting vessel-related features from histological images. Accurate vascular network segmentation provides key insights into vascular conformation and remodeling. Additionally, this pipeline also correlates vascular structures with drug distribution. While particularly relevant in oncology for characterizing the tumor microenvironment, it may also be applied to other diseases where vascular alterations are of paramount importance, including those involving inflammation, fibrosis, and microvascular dysfunction. By enhancing our understanding of vascular-mediated disease progression and treatment delivery, this approach supports both research and clinical decision-making.</p>
+<h2 id="objectives">
+  Objectives
+  <a class="anchor" href="#objectives">#</a>
+</h2>
+<ul>
+<li><strong>Quantitative Analysis</strong>: Extracts precise vessel morphology and spatial distribution metrics.</li>
+<li><strong>Automated &amp; Scalable</strong>: Processes large datasets efficiently, reducing manual workload.</li>
+<li><strong>Open-Source &amp; Modifiable</strong>: Easily adaptable to different research contexts and imaging modalities.</li>
+<li><strong>Interdisciplinary Integration</strong>: Combines pathology and bioinformatic image analysis.</li>
+</ul>
+<h2 id="getting-started">
+  Getting Started
+  <a class="anchor" href="#getting-started">#</a>
+</h2>
+<ol>
+<li><strong>Prepare Your Data</strong>:
+<ul>
+<li>1.1 Stain the histological images of interest for CD31</li>
+<li>1.2 Ensure the images are formatted correctly (e.g., <code>.tiff</code>, <code>.jpg</code>)</li>
+</ul>
+</li>
+<li><strong>Visualize the Slide in QuPath &amp; Perform Tiling</strong>:
+<ul>
+<li>2.1 Image visualization and annotation</li>
+<li>2.2 Tile creation</li>
+</ul>
+</li>
+<li><strong>Segment Vessels and Extract Features in Python</strong>:
+<ul>
+<li>3.1 Convertion of RGB to HSV format</li>
+<li>3.2 Application of Otsu’s thresholding</li>
+<li>3.3 Tile stitching</li>
+<li>3.4 Morphological operations</li>
+<li>3.5 Feature extraction</li>
+</ul>
+</li>
+<li><strong>Infer drug distribution</strong>
+<ul>
+<li>4.1 Generation of synthetic vessel masks</li>
+<li>4.2 Definition of a known drug distribution function</li>
+<li>4.3 Application of GP modelling on simulator</li>
+<li>4.4 Assesment of model accuracy</li>
+</ul>
+</li>
+<li><strong>Interpret Your Data</strong></li>
+</ol>
+<hr>
+<h2 id="step-by-step-guide">
+  Step-by-Step Guide
+  <a class="anchor" href="#step-by-step-guide">#</a>
+</h2>
+<p>So, you&rsquo;ve some histological images and a good dose of scientific curiosity. Now what? Let&rsquo;s walk through the pipeline together, breaking it down step by step.</p>
+<h3 id="1-prepare-your-data">
+  1. <strong>Prepare Your Data</strong>
+  <a class="anchor" href="#1-prepare-your-data">#</a>
+</h3>
+<p>Before diving into analysis, we need to prepare your images. Here’s what you need to get your data ready for processing:</p>
+<ul>
+<li>
+<h4 id="11-stain-the-histological-images-of-interest-for-cd31">
+  1.1 Stain the histological images of interest for CD31
+  <a class="anchor" href="#11-stain-the-histological-images-of-interest-for-cd31">#</a>
+</h4>
+<p>The first step is to obtain the histological images of interest. These images must include a stain that highlights blood vessels. Common choices are CD31 or CD34, both of which label the endothelial cells lining the vasculature. CD31 is particularly useful due to its strong and specific endothelial staining, while CD34 provides additional coverage of endothelial and progenitor cells. These stains are essential for enhancing vessel contrast and enabling analyses further down the pipeline. Finally, the slides need to be scanned digitally for further evaluation.</p>
+</li>
+<li>
+<h4 id="12-ensure-the-images-are-formatted-correctly-eg-tiff-jpg">
+  1.2 Ensure the images are formatted correctly (e.g., <code>.tiff</code>, <code>.jpg</code>)
+  <a class="anchor" href="#12-ensure-the-images-are-formatted-correctly-eg-tiff-jpg">#</a>
+</h4>
+<p>Once you have your images, it’s crucial that they are in the right format for compatibility with the analysis pipeline. The most commonly used image formats for this type of work are .tiff (higher quality, slower processing) and .jpg (lower quality, faster processing).</p>
+</li>
+</ul>
+<h3 id="2-visualize-the-slide-in-qupath--perform-tiling">
+  2. <strong>Visualize the Slide in QuPath &amp; Perform Tiling</strong>
+  <a class="anchor" href="#2-visualize-the-slide-in-qupath--perform-tiling">#</a>
+</h3>
+<ul>
+<li>
+<h4 id="21-image-visualization-and-annotation">
+  2.1 Image visualization and annotation
+  <a class="anchor" href="#21-image-visualization-and-annotation">#</a>
+</h4>
+<p>Before we can analyze vessels, we need to load the slides into QuPath, a powerful image analysis software for digital pathology. Consider it your digital microscope where you can zoom, pan, and annotate. Use QuPath’s built-in tools to annotate regions of interest (ROIs) containing the vascular structures you wish to analyse. You may also adjust visualization settings to enhance contrast and highlight vascular features for better segmentation.</p>
+</li>
+<li>
+<h4 id="22-tile-creation">
+  2.2 Tile creation
+  <a class="anchor" href="#22-tile-creation">#</a>
+</h4>
+<p>Now, break down your images into digestible tiles. Imagine you&rsquo;re a cartographer mapping out a new land. You wouldn’t study the entire continent at once, right? You’d divide it into sections. That’s exactly why tiling is a crucial preprocessing step for users with images that are too large to process efficiently all at once, so they are divided into smaller, more manageable tiles. This is how vessels are captured with adequate detail while maintaining computational efficiency.</p>
+<ul>
+<li>Navigate to: &ldquo;Analyze → Tiles &amp; Superpixels → Create Tiles&rdquo; to generate sub-images, or tiles.</li>
+<li>Set tile size based on the expected vessel dimensions, ensuring adequate resolution for segmentation.</li>
+<li>Execute the <code>ExportingImages.groovy</code> script as follows:</li>
+</ul>
+<p>Firstly, preliminary setup requires importation of the necessary QuPath libraries for image writing and region requests, enabling you to manipulate images and regions within QuPath.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span><span style="color:#f92672">import</span> qupath.lib.images.writers.ImageWriterTools
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> qupath.lib.regions.RegionRequest
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> qupath.lib.gui.scripting.QPEx
+</span></span></code></pre></div><p>Here, you define the path where the tiles will be saved, you retrieve the current image data and server, and you retrieve the hierarchy of the image data and the annotations present in the image. This information is essential for accessing the images you will process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Insert/Path/to/Slide&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> imageData <span style="color:#f92672">=</span> getCurrentImageData<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> server <span style="color:#f92672">=</span> getCurrentServer<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> filename <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> hierarchy <span style="color:#f92672">=</span> imageData<span style="color:#f92672">.</span><span style="color:#a6e22e">getHierarchy</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> annotations <span style="color:#f92672">=</span> hierarchy<span style="color:#f92672">.</span><span style="color:#a6e22e">getAnnotationObjects</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p>In this loop, the script processes each annotation. It retrieves the ROI and creates a region request for that ROI. If the annotation type is &ldquo;Image,&rdquo; it generates a tile name and saves the region as a .jpg file in the specified path. This process automates tile extraction and ensures that the relevant details are preserved.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>annotation <span style="color:#66d9ef">in</span> annotations<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    roi <span style="color:#f92672">=</span> annotation<span style="color:#f92672">.</span><span style="color:#a6e22e">getROI</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print<span style="color:#f92672">(</span>annotation<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> request <span style="color:#f92672">=</span> RegionRequest<span style="color:#f92672">.</span><span style="color:#a6e22e">createInstance</span><span style="color:#f92672">(</span>imageData<span style="color:#f92672">.</span><span style="color:#a6e22e">getServerPath</span><span style="color:#f92672">(),</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">,</span> roi<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    tiletype <span style="color:#f92672">=</span> annotation<span style="color:#f92672">.</span><span style="color:#a6e22e">getParent</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getPathClass</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>    print<span style="color:#f92672">(</span>tiletype<span style="color:#f92672">.</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>tiletype<span style="color:#f92672">.</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">().</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Image&#34;</span><span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        String tilename <span style="color:#f92672">=</span> String<span style="color:#f92672">.</span><span style="color:#a6e22e">format</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;InsertSlideName.jpg&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        ImageWriterTools<span style="color:#f92672">.</span><span style="color:#a6e22e">writeImageRegion</span><span style="color:#f92672">(</span>server<span style="color:#f92672">,</span> request<span style="color:#f92672">,</span> path <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">+</span> tilename<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>After running the entire script, check the tile output for completeness and quality to ensure that all relevant details are preserved before proceeding to segmentation. Are you all set? Let’s proceed to the next section.</p>
+</li>
+</ul>
+<h3 id="3-segment-vessels-and-extract-features-in-python">
+  3. <strong>Segment Vessels and Extract Features in Python</strong>
+  <a class="anchor" href="#3-segment-vessels-and-extract-features-in-python">#</a>
+</h3>
+<p>This is where the true transformation — or as some may say, magic— happens. With the image tiles ready, you can perform vessel segmentation and feature extraction using Python. Simply run the <code>Segmentation.py</code> script as follows.</p>
+<p>In the prelinimary setup, upload necessary libraries.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> cv2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> skimage.measure <span style="color:#f92672">import</span> label, regionprops
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> skimage <span style="color:#f92672">import</span> measure
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> pandas <span style="color:#66d9ef">as</span> pd
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span></code></pre></div><p>Next, define the path that sets the directory where the images are stored and create a list of subdirectories (folders) within the specified path.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>PATH <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Insert/Path/to/Folders&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>folders <span style="color:#f92672">=</span> [item <span style="color:#66d9ef">for</span> item <span style="color:#f92672">in</span> os<span style="color:#f92672">.</span>listdir(PATH) <span style="color:#66d9ef">if</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>isdir(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(PATH, item))]
+</span></span></code></pre></div><p>Now, loop through each folder to process the images contained within, construct the image path, and read the image using OpenCV. Additionally, you can check if a directory for saving segmented images exists, and create it if not.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> folder <span style="color:#f92672">in</span> folders:
+</span></span><span style="display:flex;"><span>    general_path <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(PATH, folder)
+</span></span><span style="display:flex;"><span>    image_path <span style="color:#f92672">=</span> general_path <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.jpg&#34;</span>
+</span></span><span style="display:flex;"><span>    original <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>imread(image_path)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Image - </span><span style="color:#e6db74">{</span>image_path<span style="color:#e6db74">}</span><span style="color:#e6db74"> is read&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>exists(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>general_path<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{</span>folder<span style="color:#e6db74">}</span><span style="color:#e6db74">_SEGMENTATION&#34;</span>):
+</span></span><span style="display:flex;"><span>        os<span style="color:#f92672">.</span>makedirs(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>general_path<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{</span>folder<span style="color:#e6db74">}</span><span style="color:#e6db74">_SEGMENTATION&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    directory_to_save <span style="color:#f92672">=</span> general_path <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">+</span> folder <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;_SEGMENTATION/&#34;</span>  
+</span></span></code></pre></div><ul>
+<li>
+<h4 id="31-convertion-of-rgb-to-hsv-format">
+  3.1 Convertion of RGB to HSV format
+  <a class="anchor" href="#31-convertion-of-rgb-to-hsv-format">#</a>
+</h4>
+<p>Blood vessels love to hide, but their secrets can be revealed with the right tips and tricks. The first trick is converting the extracted tiles from the standard RGB (Red, Green, Blue) colour space to HSV (Hue, Saturation, Value) format. This transformation is particularly useful because the H channel enhances the contrast of blood vessels, making them easier to distinguish from the surrounding tissue. Using the OpenCV library, the conversion is straightforward</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>h_s_v_image <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>cvtColor(original, cv2<span style="color:#f92672">.</span>COLOR_BGR2HSV)
+</span></span><span style="display:flex;"><span>h, s, v <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>split(h_s_v_image)
+</span></span><span style="display:flex;"><span>h <span style="color:#f92672">=</span> <span style="color:#ae81ff">255</span> <span style="color:#f92672">-</span> h
+</span></span></code></pre></div></li>
+<li>
+<h4 id="32-application-of-otsus-thresholding">
+  3.2 Application of Otsu’s thresholding
+  <a class="anchor" href="#32-application-of-otsus-thresholding">#</a>
+</h4>
+<p>Once the H channel is extracted, Otsu’s thresholding is applied to create a binary mask. This technique automatically determines an optimal threshold, separating vessel structures from the background.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>ret, binary <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>threshold(h, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">255</span>, cv2<span style="color:#f92672">.</span>THRESH_OTSU)
+</span></span><span style="display:flex;"><span>binary <span style="color:#f92672">=</span> binary<span style="color:#f92672">.</span>astype(np<span style="color:#f92672">.</span>uint8)
+</span></span><span style="display:flex;"><span>binary <span style="color:#f92672">*=</span> <span style="color:#ae81ff">255</span>
+</span></span></code></pre></div></li>
+<li>
+<h4 id="33-tile-stitching">
+  3.3 Tile stitching
+  <a class="anchor" href="#33-tile-stitching">#</a>
+</h4>
+<p>For now, you&rsquo;re left with individual segmented tiles. However, like solving a puzzle where you’ve analyzed each piece individually, it’s time to put them back together to see the bigger picture. ???????????????????????</p>
+</li>
+<li>
+<h4 id="34-morphological-operations">
+  3.4 Morphological operations
+  <a class="anchor" href="#34-morphological-operations">#</a>
+</h4>
+<p>You fine-tune the segmentation by cleaning up noise and ensuring vessel structures are continuous thanks to morphological operations. Feel free to play with the parameters below to tailor the output to your necessities, according to the characteristics of your histological images and the level of detail required for your analysis.</p>
+<ul>
+<li>If vessels appear fragmented → Increase dilation iterations or use a larger segmentation kernel.</li>
+<li>If vessels merge too much → Decrease dilation iterations or use a smaller segmentation kernel.</li>
+<li>If there are small gaps in vessels → Increase closing iterations or kernel size.</li>
+<li>If fine details are lost → Use a smaller closing kernel or fewer iterations.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>kernel_for_structuring_element_for_segmentation <span style="color:#f92672">=</span> (<span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">15</span>)
+</span></span><span style="display:flex;"><span>kernel_for_structuring_element_for_closing <span style="color:#f92672">=</span> (<span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">15</span>)
+</span></span><span style="display:flex;"><span>iterations_for_dilate <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>iterations_for_closing <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>
+</span></span></code></pre></div><p>Dilation is used to bridge small gaps between fragmented vessel structures, improving connectivity. Closing, which involves dilation followed by erosion, eliminates small holes within vessels. Additionally, you may find the boundaries of the detected vessels to fill them in the binary image.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>kernel <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>getStructuringElement(cv2<span style="color:#f92672">.</span>MORPH_ELLIPSE, kernel_for_structuring_element_for_segmentation)
+</span></span><span style="display:flex;"><span>binary <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>dilate(binary, kernel, iterations<span style="color:#f92672">=</span>iterations_for_dilate)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cnts <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>findContours(binary, cv2<span style="color:#f92672">.</span>RETR_EXTERNAL, cv2<span style="color:#f92672">.</span>CHAIN_APPROX_SIMPLE)
+</span></span><span style="display:flex;"><span>cnts <span style="color:#f92672">=</span> cnts[<span style="color:#ae81ff">0</span>] <span style="color:#66d9ef">if</span> len(cnts) <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">else</span> cnts[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> cnts:
+</span></span><span style="display:flex;"><span>   cv2<span style="color:#f92672">.</span>drawContours(binary, [c], <span style="color:#ae81ff">0</span>, (<span style="color:#ae81ff">255</span>, <span style="color:#ae81ff">255</span>, <span style="color:#ae81ff">255</span>), <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kernel <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>getStructuringElement(cv2<span style="color:#f92672">.</span>MORPH_RECT, kernel_for_structuring_element_for_closing)
+</span></span><span style="display:flex;"><span>opening <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>morphologyEx(binary, cv2<span style="color:#f92672">.</span>MORPH_OPEN, kernel, iterations<span style="color:#f92672">=</span>iterations_for_closing)
+</span></span></code></pre></div><p>Now that you have finalized the segmentation, save the processed image to the specified directory.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>imsave(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>directory_to_save<span style="color:#e6db74">}{</span>folder<span style="color:#e6db74">}</span><span style="color:#e6db74">_Segmented.png&#34;</span>, opening, cmap<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gray&#34;</span>)
+</span></span></code></pre></div><p>Example output: a binary image, created using a mask, where all vessels are represented in white and the background is shown in black.</p>
+<!-- raw HTML omitted -->
+<p>To enhance interpretability - because seeing is believing - contour detection outlines vessel boundaries as an overlay on the original images. Nothing beats a well-labeled, highlighted image that speaks for itself, showcasing exactly what you&rsquo;ve extracted.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>contours, hierarchy <span style="color:#f92672">=</span> cv2<span style="color:#f92672">.</span>findContours(opening, cv2<span style="color:#f92672">.</span>RETR_TREE, cv2<span style="color:#f92672">.</span>CHAIN_APPROX_SIMPLE)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> contours:
+</span></span><span style="display:flex;"><span>   cv2<span style="color:#f92672">.</span>drawContours(original, [c], <span style="color:#ae81ff">0</span>, (<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">255</span>, <span style="color:#ae81ff">0</span>), <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> cv2<span style="color:#f92672">.</span>imwrite(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>directory_to_save<span style="color:#e6db74">}{</span>folder<span style="color:#e6db74">}</span><span style="color:#e6db74">_Vessels.jpg&#34;</span>, original)
+</span></span></code></pre></div><p>Example output: the original histological image, with vessel countours highlighted in green.</p>
+<!-- raw HTML omitted -->
+</li>
+<li>
+<h4 id="35-feature-extraction">
+  3.5 Feature extraction
+  <a class="anchor" href="#35-feature-extraction">#</a>
+</h4>
+<p>Great, you now have segmented vessels, but science demands numbers, not just pretty pictures. To obtain more information on vessel morphology, quantitative features are extracted using <code>regionprops_table</code> from <code>skimage.measure</code>. These properties include:</p>
+<ul>
+<li><code>area</code>: The number of pixels inside each segmented vessel.</li>
+<li><code>axis_major_length</code>: The length of the longest axis of the vessel (major axis of the fitted ellipse).</li>
+<li><code>axis_minor_length</code>: The length of the shortest axis of the vessel (minor axis of the fitted ellipse).</li>
+<li><code>eccentricity</code>: Measures how close to a circle the vessel is (0 = perfect circle, between 0 and 1 = ellipse, 1 = parabola).</li>
+<li><code>orientation</code>: The angle in degrees of the major axis relative to the horizontal axis.</li>
+</ul>
+<p>The <code>label()</code> function from <code>skimage.measure</code> assigns a unique integer label to each connected component - in our case a segmented vessel - in the binary image, this helps in identifying individual vessels. You then define the list of desired morphological properties and compute them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>label_img <span style="color:#f92672">=</span> label(opening)
+</span></span><span style="display:flex;"><span>all_props <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;area&#34;</span>, <span style="color:#e6db74">&#34;axis_major_length&#34;</span>, <span style="color:#e6db74">&#34;axis_minor_length&#34;</span>, <span style="color:#e6db74">&#34;eccentricity&#34;</span>, <span style="color:#e6db74">&#34;orientation&#34;</span>]
+</span></span><span style="display:flex;"><span>props <span style="color:#f92672">=</span> regionprops(label_img)
+</span></span><span style="display:flex;"><span>props <span style="color:#f92672">=</span> measure<span style="color:#f92672">.</span>regionprops_table(label_img, original, properties<span style="color:#f92672">=</span>all_props)
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>DataFrame(props)
+</span></span><span style="display:flex;"><span>data<span style="color:#f92672">.</span>to_csv(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>directory_to_save<span style="color:#e6db74">}</span><span style="color:#e6db74">Measurements_</span><span style="color:#e6db74">{</span>folder<span style="color:#e6db74">}</span><span style="color:#e6db74">.csv&#39;</span>, index<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span></code></pre></div><p>The output is a CSV file <code>{folder}_Measurements.csv</code> containing quantitative measurements of each detected vessel in the segmented image. The columns of the CSV file represent different morphological properties of the vessels, and each row corresponds to one labeled vessel.</p>
+</li>
+</ul>
+<h3 id="4-infer-drug-distributions">
+  4. <strong>Infer Drug Distributions</strong>
+  <a class="anchor" href="#4-infer-drug-distributions">#</a>
+</h3>
+<p>Let&rsquo;s now explore a path illuminated by our newfound understanding of vascular network morphology, enhanced by the power of Gaussian Process (GP) Modelling, to uncover the biological relevance of vessel arrangement. As you know, any drug reaches it&rsquo;s target through vessels, but how exactly do vessel morphology and distribution impact the diffusion of compounds from the vessels into surrounding tissues? To answer, we must correlate the vascular network extracted from histological images with MALDI imaging data through GP modelling. Your aim is to model the spatial distribution of a drug within a tissue sample based on MALDI imaging, where pixel intensity is directly proportional to drug concentration. However, before applying GP modelling to real images, we must validate the model’s accuracy through simulations.</p>
+<blockquote>
+<p><strong>Theoretical Background</strong>: A <strong>Gaussian Process</strong> (GP) is a collection of random variables, where any finite subset follows a multivariate normal distribution. This statistical method offers a probabilistic framework for modelling spatial dependencies. It is widely used in spatial statistics and machine learning to infer continuous functions from discrete data points. In this context, GP modelling allows us to estimate the underlying drug distribution function based on observed MALDI intensities.</p></blockquote>
+<ul>
+<li>
+<h4 id="41-generating-synthetic-vessel-images">
+  4.1 Generating synthetic vessel images**
+  <a class="anchor" href="#41-generating-synthetic-vessel-images">#</a>
+</h4>
+<p>To begin, execute the <code>Final_optimized_4_Windows.R</code> you may find in this repository.</p>
+<p>As usual, set up your environment. Notably, set a fixed seed for random number generation and import the <code>Statistical Rethinking</code> package (detailed intructions for installation may be found on <a href="https://github.com/rmcelreath/rethinking">Richard McElreath&rsquo;s rethinking repository</a>). We also create a parallel cluster to speed things up.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">20241028</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(rethinking)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(parallel)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(plot.matrix)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(viridis)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">library</span>(MASS)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_cores <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">detectCores</span>() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>cl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">makeCluster</span>(num_cores)
+</span></span></code></pre></div><p>We start by simulating binary vessel masks as square matrices, where pixels with value <code>1</code> represent vessel regions and <code>0</code> represent any non-vascular tissue.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>test_function <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">function</span>(n, circles) {
+</span></span><span style="display:flex;"><span>  mat <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#ae81ff">0</span>, nrow <span style="color:#f92672">=</span> n, ncol <span style="color:#f92672">=</span> n)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>n) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(j <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>n) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span>(circle <span style="color:#66d9ef">in</span> circles) {
+</span></span><span style="display:flex;"><span>        center <span style="color:#f92672">&lt;-</span> circle<span style="color:#f92672">$</span>center
+</span></span><span style="display:flex;"><span>        radius <span style="color:#f92672">&lt;-</span> circle<span style="color:#f92672">$</span>radius
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">sqrt</span>((i <span style="color:#f92672">-</span> center[1])^2 <span style="color:#f92672">+</span> (j <span style="color:#f92672">-</span> center[2])^2) <span style="color:#f92672">&lt;=</span> radius) {
+</span></span><span style="display:flex;"><span>          mat[i, j] <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>(mat)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Here, you may manually set the number of images and matrix size to obtain your desired trade-off between accuraccuracy and computational cost. In this case we are generating <code>10</code> masks each having a <code>20x20</code> grid with circular vessel regions. The vessel positions and radii are randomly sampled to introduce variability.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>N_img <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">10</span>   <span style="color:#75715e"># Number of synthetic images</span>
+</span></span><span style="display:flex;"><span>n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">20</span>       <span style="color:#75715e"># Matrix dimensions</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>circles_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">vector</span>(<span style="color:#e6db74">&#34;list&#34;</span>, N_img)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img) {
+</span></span><span style="display:flex;"><span>  circles_list[[i]] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">list</span>(center <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">1</span>), <span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">1</span>)), radius <span style="color:#f92672">=</span> <span style="color:#a6e22e">runif</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>)),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">list</span>(center <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">1</span>), <span style="color:#a6e22e">sample</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">1</span>)), radius <span style="color:#f92672">=</span> <span style="color:#a6e22e">runif</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>))
+</span></span><span style="display:flex;"><span>  )
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We generate vessel masks in parallel using the defined <code>test_function()</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">clusterExport</span>(cl, <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;test_function&#34;</span>, <span style="color:#e6db74">&#34;n&#34;</span>, <span style="color:#e6db74">&#34;circles_list&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mats <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) <span style="color:#a6e22e">test_function</span>(n, circles_list[[i]]))
+</span></span></code></pre></div></li>
+<li>
+<h4 id="42-creating-simulated-maldi-images">
+  4.2 Creating Simulated MALDI Images
+  <a class="anchor" href="#42-creating-simulated-maldi-images">#</a>
+</h4>
+<p>Next, we generate simulated MALDI intensity maps based on any predefined function you like, such as an exponential decay model:</p>
+<pre tabindex="0"><code class="language-math" data-lang="math">I(x) = \eta^2 e^{- \frac{d(x)^2}{2\rho^2}}
+</code></pre><p>where we manually define the parameters:</p>
+<ul>
+<li>$d(x)$, the Euclidean distance from vessels,</li>
+<li>$\eta^2$, the signal variance,</li>
+<li>$\rho$, the characteristic length scale controlling spatial correlation.</li>
+</ul>
+<p>First, compute Euclidean distance matrices for each image in parallel.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>grids <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) <span style="color:#a6e22e">expand.grid</span>(X <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>n, Y <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>n))
+</span></span><span style="display:flex;"><span>Dmats <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) <span style="color:#a6e22e">as.matrix</span>(<span style="color:#a6e22e">dist</span>(grids[[i]], method <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;euclidean&#34;</span>)))
+</span></span></code></pre></div><p>Then, as previously mentioned, define the the kernel function parameters.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>beta <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>etasq <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>rho <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sqrt</span>(<span style="color:#ae81ff">0.5</span>)
+</span></span></code></pre></div><p>Compute covariance matrices using the radial basis function (RBF) kernel.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">clusterExport</span>(cl, <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;beta&#34;</span>, <span style="color:#e6db74">&#34;etasq&#34;</span>, <span style="color:#e6db74">&#34;rho&#34;</span>, <span style="color:#e6db74">&#34;Dmats&#34;</span>))
+</span></span><span style="display:flex;"><span>Ks <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) {
+</span></span><span style="display:flex;"><span>  etasq <span style="color:#f92672">*</span> <span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span> <span style="color:#f92672">*</span> ((Dmats[[i]] <span style="color:#f92672">/</span> rho)^2)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">diag</span>(<span style="color:#ae81ff">1e-9</span>, n<span style="color:#f92672">*</span>n)
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><p>Now, sample synthetic MALDI intensities using a GP prior.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">clusterExport</span>(cl, <span style="color:#e6db74">&#34;Ks&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sim_gp <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) {
+</span></span><span style="display:flex;"><span>  MASS<span style="color:#f92672">::</span><span style="color:#a6e22e">mvrnorm</span>(<span style="color:#ae81ff">1</span>, mu <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">0</span>, n<span style="color:#f92672">*</span>n), Sigma <span style="color:#f92672">=</span> Ks[[i]])
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><p>Generate observed intensity values by adding noise.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">clusterExport</span>(cl, <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;sim_gp&#34;</span>))
+</span></span><span style="display:flex;"><span>sim_y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">parLapply</span>(cl, <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img, <span style="color:#66d9ef">function</span>(i) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">rnorm</span>(n<span style="color:#f92672">*</span>n, mean <span style="color:#f92672">=</span> sim_gp[[i]] <span style="color:#f92672">+</span> beta <span style="color:#f92672">*</span> <span style="color:#a6e22e">as.vector</span>(<span style="color:#a6e22e">t</span>(mats[[i]])), sd <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div></li>
+<li>
+<h4 id="43-inferring-drug-distribution-with-gp-regression">
+  4.3 Inferring drug distribution with GP regression
+  <a class="anchor" href="#43-inferring-drug-distribution-with-gp-regression">#</a>
+</h4>
+<p>Now that we have simulated data, we fit a Gaussian Process model using <strong>Bayesian inference</strong> with <strong>Stan (rethinking package)</strong>.</p>
+<p>First, prepare data for the Bayesian model.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>dat_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">list</span>(N <span style="color:#f92672">=</span> n<span style="color:#f92672">*</span>n)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img) {
+</span></span><span style="display:flex;"><span>  dat_list[[ <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#34;y&#34;</span>, i) ]] <span style="color:#f92672">&lt;-</span> sim_y[[i]]
+</span></span><span style="display:flex;"><span>  dat_list[[ <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#34;x&#34;</span>, i) ]] <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.vector</span>(<span style="color:#a6e22e">t</span>(mats[[i]]))
+</span></span><span style="display:flex;"><span>  dat_list[[ <span style="color:#a6e22e">paste0</span>(<span style="color:#e6db74">&#34;Dmat&#34;</span>, i) ]] <span style="color:#f92672">&lt;-</span> Dmats[[i]]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Next, define the GP model.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>model_code <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;alist(\n&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>N_img) {
+</span></span><span style="display:flex;"><span>  model_code <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(model_code,
+</span></span><span style="display:flex;"><span>                       <span style="color:#e6db74">&#34;  y&#34;</span>, i, <span style="color:#e6db74">&#34; ~ multi_normal(mu&#34;</span>, i, <span style="color:#e6db74">&#34;, K&#34;</span>, i, <span style="color:#e6db74">&#34;),\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                       <span style="color:#e6db74">&#34;  mu&#34;</span>, i, <span style="color:#e6db74">&#34; &lt;- a + b * x&#34;</span>, i, <span style="color:#e6db74">&#34;,\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                       <span style="color:#e6db74">&#34;  matrix[N, N]:K&#34;</span>, i, <span style="color:#e6db74">&#34; &lt;- etasq * exp(-0.5 * square(Dmat&#34;</span>, i, <span style="color:#e6db74">&#34; / rho)) + diag_matrix(rep_vector(0.01, N)),\n&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>model_code <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(model_code,
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;  a ~ normal(0, 1),\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;  b ~ normal(0, 0.5),\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;  etasq ~ exponential(2),\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;  rho ~ exponential(0.5)\n&#34;</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;)&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>model_list <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">eval</span>(<span style="color:#a6e22e">parse</span>(text <span style="color:#f92672">=</span> model_code))
+</span></span></code></pre></div><p>Fit the GP model using Hamiltonian Monte Carlo (HMC) via the <code>ulam</code> function from the rethinking package. This approach enables Bayesian inference on vessel spatial organization and drug distribution. Feel free to play around with the following parameters according to your computational resources.</p>
+<ul>
+<li><code>chains</code> sets how many independent MCMC chains are run to ensure proper convergence.</li>
+<li><code>cores</code> sets how many CPU cores are used to parallelize computation and speed up sampling.</li>
+<li><code>iter</code> sets how manu iterations are run per chain, including warm-up.</li>
+<li><code>warmup</code> sets how many iterations are used for warm-up (not included in posterior estimates).</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span>GP_N <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ulam</span>(model_list, data <span style="color:#f92672">=</span> dat_list, chains <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>, cores <span style="color:#f92672">=</span> num_cores, iter <span style="color:#f92672">=</span> <span style="color:#ae81ff">600</span>, warmup <span style="color:#f92672">=</span> <span style="color:#ae81ff">150</span>)
+</span></span></code></pre></div><p>Finnally, print the model summary.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">precis</span>(GP_N))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>post <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">extract.samples</span>(GP_N)
+</span></span></code></pre></div></li>
+<li>
+<h4 id="44-validating-the-model">
+  4.4 <strong>Validating the Model</strong>
+  <a class="anchor" href="#44-validating-the-model">#</a>
+</h4>
+<p>We visualize the inferred vs. true covariance functions by plotting the priors, the actual kernel and the estimated kernels (your posterior samples). Also, remember to stop the cluster to free resources.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-r" data-lang="r"><span style="display:flex;"><span><span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">08062002</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p.etasq <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rexp</span>(n, rate <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>)
+</span></span><span style="display:flex;"><span>p.rhosq <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rexp</span>(n, rate <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">plot</span>(<span style="color:#66d9ef">NULL</span>, xlim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">max</span>(Dmats[[1]])<span style="color:#f92672">/</span><span style="color:#ae81ff">3</span>), ylim <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">10</span>),
+</span></span><span style="display:flex;"><span>     xlab <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;pixel distance&#34;</span>, ylab <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;covariance&#34;</span>,
+</span></span><span style="display:flex;"><span>     main <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Prior, Actual, and Estimated Kernel&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Priors</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">20</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">curve</span>(p.etasq[i] <span style="color:#f92672">*</span> <span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span> <span style="color:#f92672">*</span> (x<span style="color:#f92672">/</span>p.rhosq[i])^2),
+</span></span><span style="display:flex;"><span>        add <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, lwd <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>, col <span style="color:#f92672">=</span> <span style="color:#a6e22e">col.alpha</span>(<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">0.5</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Actual kernel</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">curve</span>(etasq <span style="color:#f92672">*</span> <span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span> <span style="color:#f92672">*</span> (x<span style="color:#f92672">/</span>rho)^2), add <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, lwd <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Estimated kernels</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(i <span style="color:#66d9ef">in</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">20</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">curve</span>(post<span style="color:#f92672">$</span>etasq[i] <span style="color:#f92672">*</span> <span style="color:#a6e22e">exp</span>(<span style="color:#ae81ff">-0.5</span> <span style="color:#f92672">*</span> (x<span style="color:#f92672">/</span>post<span style="color:#f92672">$</span>rho[i])^2),
+</span></span><span style="display:flex;"><span>        add <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>, col <span style="color:#f92672">=</span> <span style="color:#a6e22e">col.alpha</span>(<span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">0.3</span>), lwd <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">stopCluster</span>(cl)
+</span></span></code></pre></div><p>If the inferred decay function closely matches the predefined function, it means the GP model accurately recovers known distribution parameters. So, the model&rsquo;s acccuracy is validated and ready to be easily applied to real world histological and MALDI images!</p>
+</li>
+</ul>
+<h3 id="5-interpret-your-data">
+  5. <strong>Interpret Your Data</strong>
+  <a class="anchor" href="#5-interpret-your-data">#</a>
+</h3>
+<p>Finally, you have arrived at the last step. This is where the numbers should start to talk, where images should transform into knowledge, and where you should ask yourself, <strong>“So what?”</strong>, what do these findings mean for your future research? And just like that, you’ve made sense of it all, you&rsquo;ve taken a raw histological image and extracted meaningful biological insights. So, go forth and analyze, because in the world of vessel analysis, the smallest capillary could hold the biggest discovery.</p>
+<h2 id="contributors">
+  Contributors
+  <a class="anchor" href="#contributors">#</a>
+</h2>
+<p>G. Grion, K. Roufail, F. E. Colella, Dr. Ö. Mintemur, Dr. S. L. Renne.</p>
+<h2 id="citation">
+  Citation
+  <a class="anchor" href="#citation">#</a>
+</h2>
+<p>If you use this pipeline, please cite:</p>
+<blockquote>
+<p>Renne et al., Integrating Spatial Vessel Analysis into Tumour Microenvironment Characterization, <em>Virchows Arch</em>, 485(Suppl 1), 2024.</p></blockquote>
+<h2 id="contact">
+  Contact
+  <a class="anchor" href="#contact">#</a>
+</h2>
+<p>For inquiries, please reach out via <a href="https://github.com/slrenne/erivessel/issues">GitHub Issues</a>.</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#objectives">Objectives</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#step-by-step-guide">Step-by-Step Guide</a>
+      <ul>
+        <li><a href="#1-prepare-your-data">1. <strong>Prepare Your Data</strong></a></li>
+        <li><a href="#2-visualize-the-slide-in-qupath--perform-tiling">2. <strong>Visualize the Slide in QuPath &amp; Perform Tiling</strong></a></li>
+        <li><a href="#3-segment-vessels-and-extract-features-in-python">3. <strong>Segment Vessels and Extract Features in Python</strong></a></li>
+        <li><a href="#4-infer-drug-distributions">4. <strong>Infer Drug Distributions</strong></a></li>
+        <li><a href="#5-interpret-your-data">5. <strong>Interpret Your Data</strong></a></li>
+      </ul>
+    </li>
+    <li><a href="#contributors">Contributors</a></li>
+    <li><a href="#citation">Citation</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

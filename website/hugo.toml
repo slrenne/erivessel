@@ -1,0 +1,9 @@
+baseURL = 'https://giuliagrion.github.io/'
+languageCode = 'en-us'
+title = 'Code Documentation'
+theme = "book"
+
+[params]
+  BookTheme = 'light'   # Options: light, dark, or auto
+  BookToC = true        # Enable table of contents
+  BookSearch = false     # Enable search bar
