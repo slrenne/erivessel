@@ -1,0 +1,380 @@
+---
+title: "Comprehensive Statistical Analysis of Biological Model Data"
+author: "Data Analyst"
+date: "`r Sys.Date()`"
+output: 
+  html_notebook:
+    toc: true
+    toc_depth: 3
+    theme: readable
+---
+
+# Introduction and Analytical Approach
+
+## Research Context and Analytical Framework
+
+Biological research often requires sophisticated statistical analysis to understand complex relationships between treatments and measured variables. In this analysis, we focus on examining the axis minor length across of cross-sectioned vessels of different treatments and biological models, employing a comprehensive, multi-step statistical approach.
+
+### Analytical Workflow
+
+Our analysis follows a rigorous, systematic approach designed to:
+
+1\. **Characterize Data Distribution**: Understand the underlying statistical properties
+
+2\. **Assess Normality**: Determine appropriate statistical testing methods
+
+3\. **Conduct Comparative Analysis**: Identify statistically significant differences
+
+4\. **Quantify Treatment Effects**: Measure the magnitude of observed variations
+
+### Key Methodological Considerations
+
+-   **Data Heterogeneity**: Recognize potential variations across different biological models
+-   **Statistical Robustness**: Use multiple testing approaches to ensure reliable conclusions
+-   **Comprehensive Reporting**: Provide transparent, reproducible analysis
+
+# Libraries and Computational Environment
+
+## Rationale for Selected Libraries
+
+### Statistical and Data Manipulation Libraries
+
+-   **ggplot2**: Advanced data visualization
+    -   Enables creation of complex, publication-quality graphics
+    -   Provides flexible grammar of graphics approach
+    -   Critical for representing statistical distributions and comparisons
+-   **dplyr**: Data manipulation and transformation
+    -   Offers intuitive data filtering and summarization
+    -   Enables efficient group-based calculations
+    -   Supports clean, readable data processing workflows
+
+### Advanced Statistical Analysis Libraries
+
+-   **FSA (Fisheries Stock Assessment)**:
+    -   Provides specialized statistical tests
+    -   Includes Dunn's test for post-hoc multiple comparisons
+    -   Particularly useful for non-parametric analysis
+-   **effsize**:
+    -   Calculates effect size measures
+    -   Goes beyond p-values to quantify meaningful differences
+    -   Provides Cohen's d and Cliff's delta for parametric and non-parametric data
+-   **nortest**:
+    -   Advanced normality testing
+    -   Offers robust methods for assessing data distribution
+    -   Includes Anderson-Darling test for large sample sizes
+
+## Computational Environment Setup
+
+```{r setup, include=TRUE}
+# Load essential statistical libraries
+library(ggplot2)    # Advanced data visualization
+library(dplyr)      # Data manipulation
+library(FSA)        # Advanced statistical tests (Dunn's test)
+library(effsize)    # Effect size calculations
+library(nortest)    # Advanced normality testing
+
+# Set global options for consistent reporting
+knitr::opts_chunk$set(
+  echo = TRUE,      # Show code
+  warning = FALSE,  # Suppress warnings
+  message = FALSE,  # Suppress messages
+  fig.width = 10,   # Default figure width
+  fig.height = 6    # Default figure height
+)
+```
+
+# Data Preparation and Initial Exploration
+
+## Normality Testing Strategy
+
+**Normality Tests Overview:**
+
+-   **Shapiro-Wilk Test**:
+
+    -   Purpose: Assess whether a sample comes from a normally distributed population
+
+    -   Best for: Smaller sample sizes (n \< 5000)
+
+    -   Interpretation:
+
+        -   p-value \> 0.05: Data likely normally distributed
+
+        -   p-value ≤ 0.05: Significant deviation from normal distribution
+
+    -   Strengths: Sensitive to deviations from normality, widely used standard method
+
+-   **Anderson-Darling Test**:
+
+    -   Purpose: Assess normality for larger datasets
+    -   Best for: Larger sample sizes (n \> 5000)
+    -   Characteristics:
+        -   More robust for large datasets
+        -   Provides sensitive assessment of tail behavior
+        -   Gives more weight to tail regions of distribution
+
+The following function implements a smart normality testing strategy:
+
+```{r normality-function}
+# Advanced normality testing strategy
+test_normality <- function(x) {
+  # Large sample normality test (Anderson-Darling)
+  if(length(x) > 5000) {
+    ad_test <- ad.test(x)
+    return(list(
+      test = "Anderson-Darling (n > 5000)",
+      statistic = ad_test$statistic,
+      p.value = ad_test$p.value
+    ))
+  } 
+  # Standard normality test for smaller samples
+  else {
+    sw_test <- shapiro.test(x)
+    return(list(
+      test = "Shapiro-Wilk",
+      statistic = sw_test$statistic,
+      p.value = sw_test$p.value
+    ))
+  }
+}
+```
+
+## Data Import and Exploratory Analysis
+
+```{r data-preparation}
+# Read data with careful import
+my_data <- read.csv("db.csv", stringsAsFactors = FALSE)
+
+# Create output directories
+if(!dir.exists("plots")) dir.create("plots")
+if(!dir.exists("results")) dir.create("results")
+
+# Identify unique models and treatments
+models <- unique(my_data$model)
+treatments <- unique(my_data$treatment)
+
+# Initial data overview
+cat("Data Summary:\n")
+cat("Total Observations:", nrow(my_data), "\n")
+cat("Unique Models:", paste(models, collapse = ", "), "\n")
+cat("Treatments:", paste(treatments, collapse = ", "), "\n\n")
+```
+
+# Statistical Analysis Loop
+
+## Comprehensive Analysis Strategy
+
+**Comparative Statistical Tests:**
+
+-   **Parametric Tests (for normally distributed data)**:
+
+    -   **One-way ANOVA**:
+
+        -   Purpose: Compare means across multiple groups
+
+        -   Used when: Data is normally distributed with multiple treatment groups
+
+        -   Determines statistically significant differences between group means
+
+        -   Follow-up: **Tukey HSD post-hoc** test if ANOVA is significant
+
+    -   **Independent t-test**:
+
+        -   Purpose: Compare means between two independent groups
+
+        -   Used when: Data is normally distributed with two treatment groups
+
+        -   Assesses whether the means of two groups are significantly different\
+
+-   **Non-Parametric Tests (for non-normally distributed data)**:
+
+    -   **Kruskal-Wallis Test**:
+
+        -   Purpose: Non-parametric alternative to one-way ANOVA
+        -   Used when: Data is not normally distributed with multiple treatment groups
+        -   Compares median ranks across groups
+        -   Follow-up: **Dunn's** **test** for pairwise comparisons if significant
+
+    -   **Wilcoxon Rank Sum Test (Mann-Whitney U Test)**:
+
+        -   Purpose: Non-parametric alternative to independent t-test
+        -   Used when: Data is not normally distributed with two treatment groups
+        -   Compares median ranks between two independent groups
+
+```{r analysis-loop}
+# Open results file for comprehensive reporting
+results_file <- file("results/statistical_results.txt", "w")
+cat("Comprehensive Statistical Analysis Report\n", file = results_file)
+cat("Generated on: ", as.character(Sys.time()), "\n\n", file = results_file)
+
+# Systematic analysis for each model
+for (current_model in models) {
+  # Filter data for current model
+  model_data <- my_data %>% filter(model == current_model)
+  
+  # Create informative visualization
+  p <- ggplot(model_data, aes(x = axis_minor_length, color = treatment)) +
+    geom_freqpoly(bins = 30, linewidth = 1) +  # Distribution polygon
+    geom_boxplot(
+      aes(y = 0, fill = treatment), 
+      width = 2, 
+      alpha = 0.3, 
+      position = position_dodge(width = 0.5)
+    ) +
+    stat_summary(
+      aes(y = 0), 
+      fun.data = "mean_cl_normal", 
+      geom = "pointrange", 
+      color = "black", 
+      linewidth = 0.5,
+      na.rm = TRUE
+    ) +
+    labs(
+      title = paste("Axis Minor Length Distribution -", current_model),
+      subtitle = "Frequency Polygon with Treatment Comparison",
+      x = "Axis Minor Length",
+      y = "Frequency",
+      color = "Treatment",
+      fill = "Treatment"
+    ) +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  # Save high-quality plot
+  ggsave(
+    filename = paste0("plots/model_", current_model, ".png"),
+    plot = p,
+    width = 10,
+    height = 6,
+    dpi = 300
+  )
+  
+  # Descriptive and Inferential Statistics
+  treatments <- unique(model_data$treatment)
+  num_treatments <- length(treatments)
+  
+  # Detailed header for each model
+  cat(
+    "\n\n===== Statistical Analysis: ", current_model, 
+    " =====\n", file = results_file, append = TRUE
+  )
+  
+  # Descriptive Statistics
+  desc_stats <- model_data %>%
+    group_by(treatment) %>%
+    summarise(
+      n = n(),
+      mean = mean(axis_minor_length, na.rm = TRUE),
+      median = median(axis_minor_length, na.rm = TRUE),
+      sd = sd(axis_minor_length, na.rm = TRUE),
+      min = min(axis_minor_length, na.rm = TRUE),
+      max = max(axis_minor_length, na.rm = TRUE)
+    )
+  
+  # Write descriptive statistics
+  cat("Descriptive Statistics:\n", file = results_file, append = TRUE)
+  capture.output(print(desc_stats), file = results_file, append = TRUE)
+  
+  # Normality and Variance Assessment
+  norm_results <- by(
+    model_data$axis_minor_length, 
+    model_data$treatment, 
+    test_normality
+  )
+  
+  cat("\nNormality Assessment:\n", file = results_file, append = TRUE)
+  capture.output(print(norm_results), file = results_file, append = TRUE)
+  
+  # Determine distribution characteristics
+  all_normal <- all(sapply(norm_results, function(x) x$p.value > 0.05))
+  
+  # Statistical Test Selection
+  if(num_treatments > 1) {
+    if(num_treatments > 2) {
+      # Multiple group comparison
+      if(all_normal) {
+        # Parametric: ANOVA
+        anova_result <- aov(axis_minor_length ~ treatment, data = model_data)
+        cat("\nANOVA Results:\n", file = results_file, append = TRUE)
+        capture.output(summary(anova_result), file = results_file, append = TRUE)
+        
+        # Post-hoc Tukey if significant
+        if(summary(anova_result)[[1]]$`Pr(>F)`[1] < 0.05) {
+          tukey_result <- TukeyHSD(anova_result)
+          cat("\nTukey HSD Post-hoc Test:\n", file = results_file, append = TRUE)
+          capture.output(print(tukey_result), file = results_file, append = TRUE)
+        }
+      } else {
+        # Non-parametric: Kruskal-Wallis
+        kruskal_result <- kruskal.test(axis_minor_length ~ treatment, data = model_data)
+        cat("\nKruskal-Wallis Test Results:\n", file = results_file, append = TRUE)
+        capture.output(print(kruskal_result), file = results_file, append = TRUE)
+        
+        # Dunn's test for pairwise comparisons
+        if(kruskal_result$p.value < 0.05) {
+          dunn_result <- dunnTest(axis_minor_length ~ treatment, 
+                                  data = model_data, 
+                                  method = "bh")
+          cat("\nDunn's Post-hoc Test:\n", file = results_file, append = TRUE)
+          capture.output(print(dunn_result), file = results_file, append = TRUE)
+        }
+      }
+    } else {
+      # Two-group comparison
+      group1 <- model_data$axis_minor_length[model_data$treatment == treatments[1]]
+      group2 <- model_data$axis_minor_length[model_data$treatment == treatments[2]]
+      
+      if(all_normal) {
+        # Parametric: t-test
+        t_test_result <- t.test(group1, group2)
+        cat("\nt-test Results:\n", file = results_file, append = TRUE)
+        capture.output(print(t_test_result), file = results_file, append = TRUE)
+      } else {
+        # Non-parametric: Wilcoxon test
+        wilcox_result <- wilcox.test(group1, group2)
+        cat("\nWilcoxon Rank Sum Test Results:\n", file = results_file, append = TRUE)
+        capture.output(print(wilcox_result), file = results_file, append = TRUE)
+      }
+    }
+    
+    # Effect Size Calculations
+    cat("\nEffect Sizes:\n", file = results_file, append = TRUE)
+    treatment_pairs <- combn(treatments, 2, simplify = FALSE)
+    
+    for(pair in treatment_pairs) {
+      g1 <- model_data$axis_minor_length[model_data$treatment == pair[1]]
+      g2 <- model_data$axis_minor_length[model_data$treatment == pair[2]]
+      
+      # Choose appropriate effect size method
+      if(all_normal) {
+        es <- cohen.d(g1, g2)
+        cat(paste("\nCohen's d for", pair[1], "vs", pair[2], ":\n"), 
+            file = results_file, append = TRUE)
+      } else {
+        es <- cliff.delta(g1, g2)
+        cat(paste("\nCliff's delta for", pair[1], "vs", pair[2], ":\n"), 
+            file = results_file, append = TRUE)
+      }
+      capture.output(print(es), file = results_file, append = TRUE)
+    }
+  }
+}
+
+# Close results file
+close(results_file)
+```
+
+# Completion and Reporting
+
+```{r completion}
+cat("\nAnalysis Complete!\n")
+cat("Outputs Generated:\n")
+cat("1. Visualization Plots in 'plots/' directory\n")
+cat("2. Comprehensive Statistical Report in 'results/statistical_results.txt'\n")
+```
+
+# Session Information and Reproducibility
+
+```{r session-info}
+# Capture complete environment details
+sessionInfo()
+```
