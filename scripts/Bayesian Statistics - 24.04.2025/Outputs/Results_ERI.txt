@@ -1,0 +1,48 @@
+==========================================
+ANALISI BAYESIANA DETTAGLIATA DELL'EFFETTO ERI
+==========================================
+
+EFFETTO ERI SU LM02:
+-------------------
+Differenza media: 4 
+Mediana della differenza: 3.99 
+Deviazione standard: 0.99 
+Intervallo di credibilità al 95%: 2.08 5.94 
+Intervallo di credibilità al 89%: 2.43 5.58 
+Intervallo di credibilità al 50%: 3.34 4.66 
+Probabilità che l'effetto sia positivo: 99.98 %
+Probabilità che l'effetto sia > 2: 97.92 %
+Probabilità che l'effetto sia > 4: 49.7 %
+
+EFFETTO ERI SU LM04:
+-------------------
+Differenza media: 0.88 
+Mediana della differenza: 0.88 
+Deviazione standard: 1.51 
+Intervallo di credibilità al 95%: -2.12 3.79 
+Intervallo di credibilità al 89%: -1.56 3.3 
+Intervallo di credibilità al 50%: -0.13 1.86 
+Probabilità che l'effetto sia positivo: 72.12 %
+Probabilità che l'effetto sia > 2: 22.73 %
+Probabilità che l'effetto sia > 4: 1.98 %
+
+CONFRONTO TRA EFFETTI IN LM02 E LM04:
+-----------------------------------
+Differenza tra effetti (LM02 - LM04): 3.11 
+Intervallo di credibilità al 95%: -0.47 6.64 
+Probabilità che l'effetto sia maggiore in LM02: 95.43 %
+
+VALORI MEDI PER GRUPPO:
+----------------------
+Media LM02_else: 85.53 (95% CI: 83.98 - 87.14 )
+Media LM02_ERI: 89.53 (95% CI: 88.44 - 90.64 )
+Media LM04_else: 90.34 (95% CI: 88.11 - 92.71 )
+Media LM04_ERI: 91.23 (95% CI: 89.35 - 93.17 )
+
+PARAMETRI DEL MODELLO:
+--------------------
+a (intercetta): -4.449 (95% CI: -4.468 - -4.431 )
+b_model (effetto LM04): -0.055 (95% CI: -0.087 - -0.023 )
+b_ERI (effetto ERI): -0.046 (95% CI: -0.068 - -0.024 )
+b_int (interazione): 0.036 (95% CI: -0.004 - 0.075 )
+
