@@ -10,6 +10,8 @@ library(tibble)
 library(bitops) 
 library(gghilbertstrings)  
 library(pROC) 
+library(plot.matrix)
+library(viridis)
 
 # 1. Simulation of Vessel and MALDI Images
 
@@ -81,13 +83,28 @@ for(i in 1:N_img_per_group) {
 }
 
 
+###################################
+plot(maldi_images[[1]])
+pdf("output/simulated_pairs_strongWeakNoise.pdf", height = 12, width = 8)
+par(mfrow=c(6,4))
+for(j in c(0,4,8)){
+  for(i in j+1:4) { plot(vessel_images[[i]], 
+                     col = magma, key = NULL, main = "Simulated vessels",
+     xlab="", ylab="", axis.col=NULL, axis.row=NULL)}
+  for(i in j+1:4) {plot(maldi_images[[i]], 
+                    col = viridis, key = NULL, main = "Simulated maldi",
+     xlab="", ylab="", axis.col=NULL, axis.row=NULL)}
+}
+dev.off()
 
+#############################################
 plot_hilbert_image <- function(image_matrix, title_text) {
   vec <- as.vector(t(image_matrix))
   
   df <- tibble(val = 1:(n*n), value = vec)
   
-  p <- gghilbertplot(df, val, color = value, add_curve = TRUE) +
+  p <- gghilbertplot(df, val , size = 5, 
+                     color = value, add_curve = TRUE) +
     scale_color_viridis() +
     ggtitle(title_text) +
     theme_minimal()
@@ -114,9 +131,9 @@ display_image_pair <- function(index, save_plots = FALSE) {
   }
 }
 
-# for(i in 1:(3 * N_img_per_group)) {
-#   display_image_pair(i)
-# }
+for(i in 1:(3 * N_img_per_group)) {
+  display_image_pair(i)
+}
 
 
 
