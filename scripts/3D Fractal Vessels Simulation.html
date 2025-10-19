@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Fractal Vessels Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .control-panel {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            overflow-y: auto;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 0 20px 20px 0;
+        }
+
+        .visualization {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #threejs-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .intersection-view {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            height: 320px;
+            min-width: 200px;
+            min-height: 200px;
+            max-width: 600px;
+            max-height: 600px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            resize: both;
+            overflow: hidden;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            cursor: nw-resize;
+            background: linear-gradient(-45deg, transparent 30%, #667eea 30%, #667eea 50%, transparent 50%, transparent 80%, #667eea 80%);
+            border-radius: 0 0 15px 0;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 25px;
+            color: #667eea;
+            font-weight: 700;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin: 25px 0 15px;
+            color: #555;
+            font-weight: 600;
+            padding: 10px 0;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        .parameter-group {
+            margin-bottom: 20px;
+            background: rgba(248, 249, 250, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 8px;
+            cursor: pointer;
+            height: 6px;
+            border-radius: 3px;
+            background: #dee2e6;
+            outline: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .value-display {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 600;
+            text-align: right;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .generate-btn {
+            width: 100%;
+            margin: 25px 0;
+            padding: 15px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .plane-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .plane-controls button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 25px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid #dee2e6;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stats-value {
+            font-weight: 700;
+            color: #495057;
+        }
+
+        .info-tooltip {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 11px;
+            margin-left: 8px;
+            cursor: help;
+            position: relative;
+            font-weight: bold;
+        }
+
+        .info-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 12px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #intersection-canvas {
+            width: 100%;
+            height: calc(100% - 30px);
+            border-radius: 10px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+        }
+
+        .intersection-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .view-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .view-btn {
+            padding: 8px 15px;
+            margin: 0 5px 5px 0;
+            font-size: 12px;
+        }
+
+        .cutting-plane-section {
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .control-instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            max-width: 250px;
+            opacity: 0.9;
+        }
+
+        .control-instructions h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .control-instructions .control-item {
+            margin-bottom: 8px;
+        }
+
+        .control-instructions .key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .generating {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-panel">
+            <h1>3D Fractal Vessels Simulation</h1>
+            
+            <h2>Physiological Presets</h2>
+            <div class="preset-buttons">
+                <button onclick="loadPreset('coronary')">Coronary</button>
+                <button onclick="loadPreset('pulmonary')">Pulmonary</button>
+                <button onclick="loadPreset('cerebral')">Cerebral</button>
+                <button onclick="loadPreset('renal')">Renal</button>
+            </div>
+
+            <h2>Vascular Architecture</h2>
+            <div class="parameter-group">
+                <label>
+                    Main Vessel Radius (mm)
+                    <span class="info-tooltip" data-tooltip="Aorta: ~12mm, Coronary: 2-4mm, Cerebral: 1-3mm">?</span>
+                </label>
+                <input type="range" id="initialRadius" min="0.5" max="15" step="0.1" value="3.0">
+                <div class="value-display" id="initialRadiusValue">3.0 mm</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Initial Vessel Length (mm)
+                    <span class="info-tooltip" data-tooltip="Primary vessel segment length">?</span>
+                </label>
+                <input type="range" id="initialLength" min="5" max="60" step="1" value="20">
+                <div class="value-display" id="initialLengthValue">20 mm</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Branching Angle Range (degrees)
+                    <span class="info-tooltip" data-tooltip="Physiological: 20-70°, Murray's optimal: ~37°">?</span>
+                </label>
+                <input type="range" id="minAngle" min="10" max="60" step="1" value="20">
+                <input type="range" id="maxAngle" min="20" max="80" step="1" value="45">
+                <div class="value-display" id="angleRangeValue">20° - 45°</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Radius Reduction Factor
+                    <span class="info-tooltip" data-tooltip="Murray's Law optimal: ~0.79, Typical: 0.6-0.8">?</span>
+                </label>
+                <input type="range" id="radiusRatio" min="0.5" max="0.9" step="0.01" value="0.75">
+                <div class="value-display" id="radiusRatioValue">0.75</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Length Scaling Factor
+                    <span class="info-tooltip" data-tooltip="How much shorter child vessels become">?</span>
+                </label>
+                <input type="range" id="lengthRatio" min="0.6" max="0.95" step="0.01" value="0.8">
+                <div class="value-display" id="lengthRatioValue">0.80</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Branching Generations
+                    <span class="info-tooltip" data-tooltip="Number of bifurcation levels (3-12 typical)">?</span>
+                </label>
+                <input type="range" id="maxDepth" min="3" max="12" step="1" value="7">
+                <div class="value-display" id="maxDepthValue">7 generations</div>
+            </div>
+
+            <div class="parameter-group">
+                <label>
+                    Minimum Vessel Radius (mm)
+                    <span class="info-tooltip" data-tooltip="Capillaries: 0.003-0.008mm, Arterioles: 0.01-0.1mm">?</span>
+                </label>
+                <input type="range" id="minRadius" min="0.005" max="1" step="0.005" value="0.05">
+                <div class="value-display" id="minRadiusValue">0.05 mm</div>
+            </div>
+
+            <button class="generate-btn" onclick="generateVascularSystem()" id="generateBtn">
+                Generate Vascular Network
+            </button>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="cutting-plane-section">
+                <h2>Cutting Plane Controls</h2>
+                
+                <div class="plane-controls">
+                    <button onclick="setPlaneOrientation('xy')" id="btn-xy">XY Plane</button>
+                    <button onclick="setPlaneOrientation('xz')" id="btn-xz">XZ Plane</button>
+                    <button onclick="setPlaneOrientation('yz')" id="btn-yz">YZ Plane</button>
+                </div>
+                
+                <div class="parameter-group">
+                    <label>Plane Position</label>
+                    <input type="range" id="planePosition" min="-100" max="100" step="0.1" value="0">
+                    <div class="value-display" id="planePositionValue">0.0 mm</div>
+                </div>
+
+                <div class="parameter-group">
+                    <label>Plane Tilt X-Axis</label>
+                    <input type="range" id="planeRotX" min="-45" max="45" step="0.5" value="0">
+                    <div class="value-display" id="planeRotXValue">0.0°</div>
+                </div>
+
+                <div class="parameter-group">
+                    <label>Plane Tilt Y-Axis</label>
+                    <input type="range" id="planeRotY" min="-45" max="45" step="0.5" value="0">
+                    <div class="value-display" id="planeRotYValue">0.0°</div>
+                </div>
+            </div>
+
+            <div class="stats" id="stats">
+                <div class="stats-item">
+                    <span class="stats-label">Total Vessels:</span>
+                    <span class="stats-value" id="vesselCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Cross-sections:</span>
+                    <span class="stats-value" id="intersectionCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Total Volume:</span>
+                    <span class="stats-value" id="totalVolume">0.0 mm³</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Surface Area:</span>
+                    <span class="stats-value" id="surfaceArea">0.0 mm²</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Deepest Level:</span>
+                    <span class="stats-value" id="maxLevel">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <div class="canvas-container">
+                <div id="threejs-canvas"></div>
+                <div class="loading" id="loading">Initializing 3D Engine...</div>
+            </div>
+            
+            <div class="control-instructions">
+                <h3>Navigation Controls</h3>
+                <div class="control-item">
+                    <span class="key">Left Click + Drag</span><br>Rotate camera
+                </div>
+                <div class="control-item">
+                    <span class="key">Right Click + Drag</span><br>Pan camera
+                </div>
+                <div class="control-item">
+                    <span class="key">Scroll Wheel</span><br>Zoom in/out
+                </div>
+                <div class="control-item">
+                    <span class="key">Middle Click + Drag</span><br>Alternative pan
+                </div>
+            </div>
+            
+            <div class="view-controls">
+                <button class="view-btn" onclick="togglePlaneVisibility()" id="togglePlane">Hide Plane</button>
+                <button class="view-btn" onclick="toggleWireframe()" id="toggleWireframe">Wireframe</button>
+                <button class="view-btn" onclick="resetCamera()">Reset View</button>
+                <button class="view-btn" onclick="exportSystem()">Export JSON</button>
+                <button class="view-btn" onclick="exportCrossSection()">Export Cross-Section</button>
+            </div>
+            <div class="intersection-view" id="intersectionView">
+                <div class="intersection-title">Cross-Section Analysis</div>
+                <canvas id="intersection-canvas"></canvas>
+                <div class="resize-handle"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer;
+        let vesselGroup, planeGroup;
+        let vessels = [];
+        let planeNormal = new THREE.Vector3(0, 0, 1);
+        let planePosition = 0;
+        let showPlane = true;
+        let wireframeMode = false;
+        let currentPlaneOrientation = 'xy';
+        let isGenerating = false;
+
+        // Pan controls
+        let panTarget = new THREE.Vector3(0, 0, 0);
+        let panSpeed = 1.0;
+
+        // Enhanced vessel class
+        class Vessel {
+            constructor(start, end, radius, parent = null, generation = 0) {
+                this.start = start.clone();
+                this.end = end.clone();
+                this.radius = radius;
+                this.parent = parent;
+                this.generation = generation;
+                this.mesh = null;
+                this.children = [];
+                this.id = Math.random().toString(36).substr(2, 9);
+            }
+
+            getLength() {
+                return this.start.distanceTo(this.end);
+            }
+
+            getVolume() {
+                return Math.PI * this.radius * this.radius * this.getLength();
+            }
+
+            getSurfaceArea() {
+                const length = this.getLength();
+                return 2 * Math.PI * this.radius * length;
+            }
+
+            getDirection() {
+                return new THREE.Vector3().subVectors(this.end, this.start).normalize();
+            }
+        }
+
+        // Initialize Three.js scene with enhanced features
+        function initThreeJS() {
+            const container = document.getElementById('threejs-canvas');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            scene.fog = new THREE.Fog(0x1a1a2e, 150, 400);
+
+            // Enhanced camera with better positioning
+            camera = new THREE.PerspectiveCamera(
+                60,
+                container.offsetWidth / container.offsetHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(80, 60, 120);
+
+            // Enhanced renderer with better quality
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true,
+                powerPreference: "high-performance",
+                preserveDrawingBuffer: true
+            });
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            // Enhanced lighting setup
+            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(100, 100, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 300;
+            directionalLight.shadow.camera.left = -150;
+            directionalLight.shadow.camera.right = 150;
+            directionalLight.shadow.camera.top = 150;
+            directionalLight.shadow.camera.bottom = -150;
+            scene.add(directionalLight);
+
+            // Additional accent lights
+            const pointLight1 = new THREE.PointLight(0x667eea, 0.6, 100);
+            pointLight1.position.set(-50, 50, -50);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xf093fb, 0.4, 80);
+            pointLight2.position.set(50, -30, 50);
+            scene.add(pointLight2);
+
+            // Groups for organization
+            vesselGroup = new THREE.Group();
+            vesselGroup.name = 'vessels';
+            scene.add(vesselGroup);
+
+            planeGroup = new THREE.Group();
+            planeGroup.name = 'plane';
+            scene.add(planeGroup);
+
+            // Enhanced grid
+            const gridHelper = new THREE.GridHelper(150, 30, 0x444488, 0x333366);
+            gridHelper.position.y = -2;
+            scene.add(gridHelper);
+
+            // Coordinate axes
+            const axesHelper = new THREE.AxesHelper(20);
+            scene.add(axesHelper);
+
+            setupControls();
+            setupEventListeners();
+            setupResizeObserver();
+            animate();
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function setupControls() {
+            let mouseX = 0, mouseY = 0, prevMouseX = 0, prevMouseY = 0;
+            let isMouseDown = false;
+            let mouseButton = -1;
+            
+            const canvas = renderer.domElement;
+            
+            canvas.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                mouseButton = e.button;
+                mouseX = prevMouseX = e.clientX;
+                mouseY = prevMouseY = e.clientY;
+                e.preventDefault();
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                
+                const deltaX = e.clientX - prevMouseX;
+                const deltaY = e.clientY - prevMouseY;
+                
+                if (mouseButton === 2 || mouseButton === 1) { // Right click or middle click for panning
+                    // Enhanced pan controls
+                    const distance = camera.position.distanceTo(panTarget);
+                    const panSpeed = distance * 0.002;
+                    
+                    // Get camera's right and up vectors
+                    const cameraRight = new THREE.Vector3();
+                    const cameraUp = new THREE.Vector3();
+                    
+                    camera.getWorldDirection(cameraRight);
+                    cameraRight.cross(camera.up).normalize();
+                    cameraUp.copy(camera.up);
+                    
+                    // Calculate pan offset
+                    const panOffset = new THREE.Vector3();
+                    panOffset.addScaledVector(cameraRight, -deltaX * panSpeed);
+                    panOffset.addScaledVector(cameraUp, deltaY * panSpeed);
+                    
+                    // Apply pan to both camera and target
+                    camera.position.add(panOffset);
+                    panTarget.add(panOffset);
+                    camera.lookAt(panTarget);
+                    
+                } else if (mouseButton === 0) { // Left click for rotation
+                    // Enhanced rotation controls
+                    const spherical = new THREE.Spherical();
+                    const offset = new THREE.Vector3().subVectors(camera.position, panTarget);
+                    
+                    spherical.setFromVector3(offset);
+                    spherical.theta -= deltaX * 0.005;
+                    spherical.phi += deltaY * 0.005;
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                    
+                    offset.setFromSpherical(spherical);
+                    camera.position.copy(panTarget).add(offset);
+                    camera.lookAt(panTarget);
+                }
+                
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+            });
+            
+            canvas.addEventListener('mouseup', (e) => {
+                isMouseDown = false;
+                mouseButton = -1;
+            });
+            
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const scale = e.deltaY > 0 ? 1.1 : 0.9;
+                const distance = camera.position.distanceTo(panTarget);
+                const newDistance = distance * scale;
+                
+                if (newDistance > 10 && newDistance < 500) {
+                    const direction = new THREE.Vector3().subVectors(camera.position, panTarget).normalize();
+                    camera.position.copy(panTarget).add(direction.multiplyScalar(newDistance));
+                }
+            });
+            
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+
+        function setupResizeObserver() {
+            // Add ResizeObserver to handle cross-section view resizing
+            const intersectionView = document.getElementById('intersectionView');
+            
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(entries => {
+                    for (let entry of entries) {
+                        // Redraw cross-section when the view is resized
+                        setTimeout(updateIntersectionView, 50);
+                    }
+                });
+                
+                resizeObserver.observe(intersectionView);
+            }
+        }
+
+        function setupEventListeners() {
+            // Update value displays
+            const sliders = ['initialRadius', 'initialLength', 'minAngle', 'maxAngle', 
+                           'radiusRatio', 'lengthRatio', 'maxDepth', 'minRadius',
+                           'planePosition', 'planeRotX', 'planeRotY'];
+            
+            sliders.forEach(id => {
+                const slider = document.getElementById(id);
+                const display = document.getElementById(id + 'Value');
+                
+                slider.addEventListener('input', () => {
+                    updateValueDisplay(id);
+                    if (id.includes('plane') || id.includes('Angle')) {
+                        updatePlane();
+                    }
+                });
+            });
+
+            // Initialize displays
+            sliders.forEach(id => updateValueDisplay(id));
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function updateValueDisplay(id) {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(id + 'Value');
+            const value = parseFloat(slider.value);
+            
+            switch(id) {
+                case 'initialRadius':
+                case 'minRadius':
+                case 'planePosition':
+                    display.textContent = value.toFixed(2) + ' mm';
+                    break;
+                case 'initialLength':
+                    display.textContent = value + ' mm';
+                    break;
+                case 'minAngle':
+                case 'maxAngle':
+                    const minAngle = parseFloat(document.getElementById('minAngle').value);
+                    const maxAngle = parseFloat(document.getElementById('maxAngle').value);
+                    document.getElementById('angleRangeValue').textContent = `${minAngle}° - ${maxAngle}°`;
+                    break;
+                case 'planeRotX':
+                case 'planeRotY':
+                    display.textContent = value.toFixed(1) + '°';
+                    break;
+                case 'radiusRatio':
+                case 'lengthRatio':
+                    display.textContent = value.toFixed(2);
+                    break;
+                case 'maxDepth':
+                    display.textContent = value + ' generations';
+                    break;
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('threejs-canvas');
+            camera.aspect = container.offsetWidth / container.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Add subtle rotation to vessels for visual appeal
+            if (vesselGroup.children.length > 0 && !isGenerating) {
+                vesselGroup.rotation.y += 0.001;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Enhanced vascular system generation
+        async function generateVascularSystem() {
+            if (isGenerating) return;
+            
+            isGenerating = true;
+            const generateBtn = document.getElementById('generateBtn');
+            const progressFill = document.getElementById('progressFill');
+            
+            generateBtn.textContent = 'Generating...';
+            generateBtn.classList.add('generating');
+            
+            // Clear existing vessels
+            vesselGroup.clear();
+            vessels = [];
+            
+            // Get parameters
+            const params = getParameters();
+            
+            // Generate vessels with progress tracking
+            try {
+                await generateVesselsWithProgress(params);
+                updateStats();
+                updatePlane();
+                updateIntersectionView();
+                
+                generateBtn.textContent = 'Generate Vascular Network';
+                generateBtn.classList.remove('generating');
+                progressFill.style.width = '100%';
+                
+                setTimeout(() => {
+                    progressFill.style.width = '0%';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Generation failed:', error);
+                generateBtn.textContent = 'Generation Failed - Retry';
+                generateBtn.classList.remove('generating');
+            }
+            
+            isGenerating = false;
+        }
+
+        function getParameters() {
+            return {
+                initialRadius: parseFloat(document.getElementById('initialRadius').value),
+                initialLength: parseFloat(document.getElementById('initialLength').value),
+                minAngle: parseFloat(document.getElementById('minAngle').value) * Math.PI / 180,
+                maxAngle: parseFloat(document.getElementById('maxAngle').value) * Math.PI / 180,
+                radiusRatio: parseFloat(document.getElementById('radiusRatio').value),
+                lengthRatio: parseFloat(document.getElementById('lengthRatio').value),
+                maxDepth: parseInt(document.getElementById('maxDepth').value),
+                minRadius: parseFloat(document.getElementById('minRadius').value)
+            };
+        }
+
+        async function generateVesselsWithProgress(params) {
+            const progressFill = document.getElementById('progressFill');
+            
+            // Create root vessel
+            const rootVessel = new Vessel(
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, params.initialLength, 0),
+                params.initialRadius,
+                null,
+                0
+            );
+            vessels.push(rootVessel);
+            createVesselMesh(rootVessel, 0);
+            
+            progressFill.style.width = '5%';
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Generate branches with progress updates
+            const totalGenerations = params.maxDepth;
+            await generateBranchesAsync(rootVessel, params, 1, totalGenerations, progressFill);
+        }
+
+        async function generateBranchesAsync(parentVessel, params, depth, totalDepth, progressFill) {
+            if (depth >= params.maxDepth || parentVessel.radius * params.radiusRatio < params.minRadius) {
+                return;
+            }
+
+            const direction = parentVessel.getDirection();
+            const childRadius = parentVessel.radius * params.radiusRatio;
+            const childLength = params.initialLength * Math.pow(params.lengthRatio, depth);
+
+            // Enhanced branching: more branches at deeper levels
+            let numBranches = 2;
+            if (depth > 2) numBranches = Math.min(4, 2 + Math.floor(depth / 3));
+            if (depth > 6) numBranches = Math.min(6, 3 + Math.floor(depth / 4));
+
+            const childVessels = [];
+
+            for (let i = 0; i < numBranches; i++) {
+                // Calculate branch direction with improved distribution
+                const angle = params.minAngle + Math.random() * (params.maxAngle - params.minAngle);
+                const azimuth = (i / numBranches) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+                
+                // Add some natural variation
+                const angleVariation = (Math.random() - 0.5) * 0.3;
+                const actualAngle = angle + angleVariation;
+
+                // Create rotation axes
+                const perpAxis = createPerpendicularVector(direction);
+                const rotAxis = perpAxis.clone().applyAxisAngle(direction, azimuth);
+                
+                // Calculate child direction
+                const childDirection = direction.clone().applyAxisAngle(rotAxis, actualAngle);
+                
+                // Add slight curvature for more natural appearance
+                const curvature = (Math.random() - 0.5) * 0.2;
+                childDirection.add(new THREE.Vector3(
+                    (Math.random() - 0.5) * curvature,
+                    (Math.random() - 0.5) * curvature,
+                    (Math.random() - 0.5) * curvature
+                )).normalize();
+
+                // Create child vessel
+                const childStart = parentVessel.end.clone();
+                const childEnd = childStart.clone().add(childDirection.multiplyScalar(childLength));
+
+                const childVessel = new Vessel(childStart, childEnd, childRadius, parentVessel, depth);
+                vessels.push(childVessel);
+                parentVessel.children.push(childVessel);
+                childVessels.push(childVessel);
+                
+                createVesselMesh(childVessel, depth);
+
+                // Update progress
+                const progress = 5 + (depth / totalDepth) * 85;
+                progressFill.style.width = progress + '%';
+            }
+
+            // Small delay to show progress
+            if (depth <= 4) {
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+
+            // Recursively generate more branches
+            for (const childVessel of childVessels) {
+                await generateBranchesAsync(childVessel, params, depth + 1, totalDepth, progressFill);
+            }
+        }
+
+        function createPerpendicularVector(vector) {
+            const abs = vector.clone();
+            abs.x = Math.abs(abs.x);
+            abs.y = Math.abs(abs.y);
+            abs.z = Math.abs(abs.z);
+
+            let perpendicular;
+            if (abs.x <= abs.y && abs.x <= abs.z) {
+                perpendicular = new THREE.Vector3(1, 0, 0);
+            } else if (abs.y <= abs.z) {
+                perpendicular = new THREE.Vector3(0, 1, 0);
+            } else {
+                perpendicular = new THREE.Vector3(0, 0, 1);
+            }
+
+            return new THREE.Vector3().crossVectors(vector, perpendicular).normalize();
+        }
+
+        function createVesselMesh(vessel, depth) {
+            const length = vessel.getLength();
+            const direction = vessel.getDirection();
+
+            // Adaptive geometry quality based on depth and radius
+            const radialSegments = Math.max(6, Math.min(16, Math.floor(20 - depth * 1.5)));
+            const heightSegments = Math.max(1, Math.floor(length / 5));
+
+            const geometry = new THREE.CylinderGeometry(
+                vessel.radius, 
+                vessel.radius, 
+                length, 
+                radialSegments,
+                heightSegments
+            );
+
+            // Enhanced color scheme based on depth and vessel type
+            const hue = Math.min(0.15, (depth / 12) * 0.15); // From red to orange
+            const saturation = 0.8 - depth * 0.05;
+            const lightness = 0.5 + Math.sin(depth * 0.5) * 0.1;
+            const color = new THREE.Color().setHSL(hue, saturation, lightness);
+
+            // Enhanced material with better lighting
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 100,
+                specular: new THREE.Color(0x444444),
+                transparent: depth > 8,
+                opacity: depth > 8 ? 0.8 : 1.0
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            // Position and orient the vessel
+            const midpoint = new THREE.Vector3().addVectors(vessel.start, vessel.end).multiplyScalar(0.5);
+            mesh.position.copy(midpoint);
+
+            // Align with vessel direction
+            const up = new THREE.Vector3(0, 1, 0);
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromUnitVectors(up, direction);
+            mesh.setRotationFromQuaternion(quaternion);
+
+            mesh.userData = { vessel: vessel };
+            vessel.mesh = mesh;
+            vesselGroup.add(mesh);
+        }
+
+        function updatePlane() {
+            planeGroup.clear();
+
+            if (!showPlane) return;
+
+            // Enhanced plane visualization
+            const planeGeometry = new THREE.PlaneGeometry(120, 120, 10, 10);
+            const planeMaterial = new THREE.MeshPhongMaterial({
+                color: 0x667eea,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+
+            const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            
+            // Apply rotations and position
+            const rotX = document.getElementById('planeRotX').value * Math.PI / 180;
+            const rotY = document.getElementById('planeRotY').value * Math.PI / 180;
+            const pos = parseFloat(document.getElementById('planePosition').value);
+
+            // Apply orientation first
+            switch(currentPlaneOrientation) {
+                case 'xy':
+                    planeMesh.rotation.set(0, 0, 0);
+                    break;
+                case 'xz':
+                    planeMesh.rotation.set(Math.PI/2, 0, 0);
+                    break;
+                case 'yz':
+                    planeMesh.rotation.set(0, Math.PI/2, 0);
+                    break;
+            }
+
+            // Then apply additional rotations
+            planeMesh.rotation.x += rotX;
+            planeMesh.rotation.y += rotY;
+            
+            // Calculate normal after all rotations
+            planeNormal = new THREE.Vector3(0, 0, 1);
+            planeNormal.applyEuler(planeMesh.rotation);
+            
+            // Position plane
+            planeMesh.position.copy(planeNormal.clone().multiplyScalar(pos));
+            planePosition = pos;
+
+            // Enhanced wireframe
+            const wireframeGeometry = new THREE.EdgesGeometry(planeGeometry);
+            const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                color: 0x4466ff, 
+                linewidth: 2,
+                opacity: 0.8,
+                transparent: true
+            });
+            const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+            wireframe.position.copy(planeMesh.position);
+            wireframe.rotation.copy(planeMesh.rotation);
+
+            // Add plane normal indicator
+            const arrowGeometry = new THREE.ConeGeometry(2, 8, 8);
+            const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0xff4444 });
+            const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+            arrow.position.copy(planeMesh.position);
+            arrow.position.add(planeNormal.clone().multiplyScalar(8));
+            arrow.lookAt(planeMesh.position.clone().add(planeNormal.clone().multiplyScalar(16)));
+
+            planeGroup.add(planeMesh);
+            planeGroup.add(wireframe);
+            planeGroup.add(arrow);
+
+            updateIntersectionView();
+        }
+
+        function calculateIntersections() {
+            const intersections = [];
+            const tolerance = 0.001;
+            
+            vessels.forEach(vessel => {
+                if (!vessel.mesh) return;
+
+                // Improved intersection calculation
+                const startDist = vessel.start.dot(planeNormal) - planePosition;
+                const endDist = vessel.end.dot(planeNormal) - planePosition;
+                
+                if (Math.abs(startDist) < tolerance) {
+                    // Start point is on the plane
+                    addIntersection(vessel.start, vessel, intersections);
+                } else if (Math.abs(endDist) < tolerance) {
+                    // End point is on the plane
+                    addIntersection(vessel.end, vessel, intersections);
+                } else if (startDist * endDist < 0) {
+                    // Vessel crosses plane
+                    const t = Math.abs(startDist) / (Math.abs(startDist) + Math.abs(endDist));
+                    const intersectionPoint = new THREE.Vector3().lerpVectors(vessel.start, vessel.end, t);
+                    addIntersection(intersectionPoint, vessel, intersections);
+                }
+            });
+
+            return intersections;
+        }
+
+        function addIntersection(point, vessel, intersections) {
+            const vesselDir = vessel.getDirection();
+            const cosAngle = Math.abs(vesselDir.dot(planeNormal));
+            
+            // Calculate ellipse parameters
+            let majorAxis, minorAxis, angle;
+            
+            if (cosAngle > 0.999) {
+                // Nearly perpendicular - almost circular
+                majorAxis = minorAxis = vessel.radius;
+                angle = 0;
+            } else {
+                // Elliptical intersection
+                const sinAngle = Math.sqrt(1 - cosAngle * cosAngle);
+                majorAxis = vessel.radius / sinAngle;
+                minorAxis = vessel.radius;
+                
+                // Calculate rotation angle
+                const projectedDir = vesselDir.clone().sub(
+                    planeNormal.clone().multiplyScalar(vesselDir.dot(planeNormal))
+                ).normalize();
+                
+                angle = Math.atan2(projectedDir.y, projectedDir.x);
+            }
+            
+            intersections.push({
+                point: point,
+                majorAxis: majorAxis,
+                minorAxis: minorAxis,
+                angle: angle,
+                vessel: vessel,
+                cosAngle: cosAngle
+            });
+        }
+
+        function updateIntersectionView() {
+            const canvas = document.getElementById('intersection-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Get actual dimensions of the intersection view
+            const intersectionView = document.getElementById('intersectionView');
+            const viewWidth = intersectionView.offsetWidth - 30; // Account for padding
+            const viewHeight = intersectionView.offsetHeight - 45; // Account for title and padding
+            
+            // Set high-resolution canvas
+            const pixelRatio = window.devicePixelRatio || 1;
+            const scaleFactor = Math.min(3, pixelRatio * 2); // Higher quality export
+            
+            canvas.width = viewWidth * scaleFactor;
+            canvas.height = viewHeight * scaleFactor;
+            canvas.style.width = viewWidth + 'px';
+            canvas.style.height = viewHeight + 'px';
+            
+            ctx.scale(scaleFactor, scaleFactor);
+            
+            // Clear with gradient background
+            const gradient = ctx.createLinearGradient(0, 0, viewWidth, viewHeight);
+            gradient.addColorStop(0, '#f8f9fa');
+            gradient.addColorStop(1, '#e9ecef');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, viewWidth, viewHeight);
+            
+            // Calculate intersections
+            const intersections = calculateIntersections();
+            document.getElementById('intersectionCount').textContent = intersections.length;
+            
+            if (intersections.length === 0) {
+                // Draw "no intersections" message
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '16px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No cross-sections found', viewWidth/2, viewHeight/2);
+                ctx.font = '12px -apple-system, sans-serif';
+                ctx.fillText('Adjust plane position or orientation', viewWidth/2, viewHeight/2 + 20);
+                return;
+            }
+            
+            // Find bounds for scaling
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            // Create basis vectors for the plane
+            const u = createPerpendicularVector(planeNormal);
+            const v = new THREE.Vector3().crossVectors(planeNormal, u);
+            
+            // Project points and find bounds
+            const projectedPoints = intersections.map(int => {
+                const relativePos = int.point.clone().sub(
+                    planeNormal.clone().multiplyScalar(planePosition)
+                );
+                return {
+                    x: relativePos.dot(u),
+                    y: relativePos.dot(v),
+                    intersection: int
+                };
+            });
+            
+            projectedPoints.forEach(p => {
+                const r = Math.max(p.intersection.majorAxis, p.intersection.minorAxis);
+                minX = Math.min(minX, p.x - r);
+                maxX = Math.max(maxX, p.x + r);
+                minY = Math.min(minY, p.y - r);
+                maxY = Math.max(maxY, p.y + r);
+            });
+            
+            const rangeX = maxX - minX;
+            const rangeY = maxY - minY;
+            const range = Math.max(rangeX, rangeY) * 1.3;
+            
+            if (range === 0) return;
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const scale = Math.min(viewWidth, viewHeight) * 0.8 / range;
+            
+            // Draw enhanced grid
+            ctx.strokeStyle = '#dee2e6';
+            ctx.lineWidth = 0.5;
+            const gridSize = 20;
+            for (let i = -gridSize; i <= gridSize; i++) {
+                const x = viewWidth/2 + i * scale * range / gridSize;
+                const y = viewHeight/2 + i * scale * range / gridSize;
+                
+                if (x >= 0 && x <= viewWidth) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, viewHeight);
+                    ctx.stroke();
+                }
+                
+                if (y >= 0 && y <= viewHeight) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(viewWidth, y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw enhanced intersections
+            projectedPoints.forEach((p, index) => {
+                const screenX = viewWidth/2 + (p.x - centerX) * scale;
+                const screenY = viewHeight/2 - (p.y - centerY) * scale;
+                
+                const majorR = p.intersection.majorAxis * scale;
+                const minorR = p.intersection.minorAxis * scale;
+                
+                // Enhanced color based on vessel generation and properties
+                const hue = Math.min(0.15, (p.intersection.vessel.generation / 12) * 0.15);
+                const saturation = 0.8 - p.intersection.vessel.generation * 0.03;
+                const lightness = 0.5 + (p.intersection.vessel.radius * 0.1);
+                const color = `hsl(${hue * 360}, ${saturation * 100}%, ${lightness * 100}%)`;
+                
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.rotate(p.intersection.angle);
+                
+                // Enhanced shadow effect
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 3;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                
+                // Fill with gradient
+                const ellipseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(majorR, minorR));
+                ellipseGradient.addColorStop(0, color.replace(')', ', 0.8)').replace('hsl', 'hsla'));
+                ellipseGradient.addColorStop(1, color.replace(')', ', 0.3)').replace('hsl', 'hsla'));
+                
+                ctx.fillStyle = ellipseGradient;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, majorR, minorR, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Enhanced stroke
+                ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = Math.max(1.5, p.intersection.vessel.radius * 0.8);
+                ctx.stroke();
+                
+                ctx.restore();
+                
+                // Enhanced labels for larger vessels
+                if (p.intersection.vessel.radius > 0.3) {
+                    ctx.fillStyle = '#495057';
+                    ctx.font = `bold ${Math.max(10, Math.min(14, p.intersection.vessel.radius * 8))}px -apple-system, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 3;
+                    const label = `G${p.intersection.vessel.generation}`;
+                    const labelY = screenY - Math.max(majorR, minorR) - 8;
+                    
+                    // Text outline for better visibility
+                    ctx.strokeText(label, screenX, labelY);
+                    ctx.fillText(label, screenX, labelY);
+                }
+            });
+            
+            // Enhanced scale reference
+            ctx.fillStyle = '#495057';
+            ctx.font = 'bold 12px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            const scaleLength = 10 * scale; // 10mm scale
+            const scaleY = viewHeight - 25;
+            
+            // Scale bar with gradient
+            const scaleGradient = ctx.createLinearGradient(15, scaleY, 15 + scaleLength, scaleY);
+            scaleGradient.addColorStop(0, '#667eea');
+            scaleGradient.addColorStop(1, '#f093fb');
+            
+            ctx.fillStyle = scaleGradient;
+            ctx.fillRect(15, scaleY, scaleLength, 3);
+            
+            // Scale text
+            ctx.fillStyle = '#495057';
+            ctx.fillText('10mm', 15, scaleY + 18);
+            
+            // Add metadata in corner
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#6c757d';
+            ctx.fillText(`${intersections.length} vessels`, viewWidth - 10, 20);
+            ctx.fillText(`Plane: ${currentPlaneOrientation.toUpperCase()}`, viewWidth - 10, 35);
+        }
+
+        function updateStats() {
+            const vesselCount = vessels.length;
+            let totalVolume = 0;
+            let totalSurfaceArea = 0;
+            let maxGeneration = 0;
+            
+            vessels.forEach(vessel => {
+                totalVolume += vessel.getVolume();
+                totalSurfaceArea += vessel.getSurfaceArea();
+                maxGeneration = Math.max(maxGeneration, vessel.generation);
+            });
+            
+            document.getElementById('vesselCount').textContent = vesselCount.toLocaleString();
+            document.getElementById('totalVolume').textContent = totalVolume.toFixed(2) + ' mm³';
+            document.getElementById('surfaceArea').textContent = totalSurfaceArea.toFixed(2) + ' mm²';
+            document.getElementById('maxLevel').textContent = maxGeneration;
+        }
+
+        // Preset configurations with physiological values
+        function loadPreset(type) {
+            const presets = {
+                coronary: {
+                    initialRadius: 3.5,
+                    initialLength: 25,
+                    minAngle: 25,
+                    maxAngle: 60,
+                    radiusRatio: 0.75,
+                    lengthRatio: 0.8,
+                    maxDepth: 8,
+                    minRadius: 0.01
+                },
+                pulmonary: {
+                    initialRadius: 8.0,
+                    initialLength: 35,
+                    minAngle: 20,
+                    maxAngle: 50,
+                    radiusRatio: 0.79,
+                    lengthRatio: 0.85,
+                    maxDepth: 10,
+                    minRadius: 0.005
+                },
+                cerebral: {
+                    initialRadius: 2.0,
+                    initialLength: 20,
+                    minAngle: 30,
+                    maxAngle: 70,
+                    radiusRatio: 0.7,
+                    lengthRatio: 0.75,
+                    maxDepth: 7,
+                    minRadius: 0.02
+                },
+                renal: {
+                    initialRadius: 4.0,
+                    initialLength: 30,
+                    minAngle: 15,
+                    maxAngle: 45,
+                    radiusRatio: 0.8,
+                    lengthRatio: 0.9,
+                    maxDepth: 9,
+                    minRadius: 0.008
+                }
+            };
+            
+            const preset = presets[type];
+            if (!preset) return;
+            
+            // Apply preset values
+            Object.keys(preset).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = preset[key];
+                    updateValueDisplay(key);
+                }
+            });
+            
+            // Visual feedback
+            document.querySelectorAll('.preset-buttons button').forEach(btn => {
+                btn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            });
+            event.target.style.background = 'linear-gradient(135deg, #f093fb, #f5576c)';
+        }
+
+        function setPlaneOrientation(orientation) {
+            currentPlaneOrientation = orientation;
+            
+            // Reset rotation controls
+            document.getElementById('planeRotX').value = 0;
+            document.getElementById('planeRotY').value = 0;
+            document.getElementById('planePosition').value = 0;
+            
+            updateValueDisplay('planeRotX');
+            updateValueDisplay('planeRotY');
+            updateValueDisplay('planePosition');
+            
+            // Visual feedback
+            document.querySelectorAll('.plane-controls button').forEach(btn => {
+                btn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            });
+            document.getElementById(`btn-${orientation}`).style.background = 'linear-gradient(135deg, #f093fb, #f5576c)';
+            
+            updatePlane();
+        }
+
+        function togglePlaneVisibility() {
+            showPlane = !showPlane;
+            const btn = document.getElementById('togglePlane');
+            btn.textContent = showPlane ? 'Hide Plane' : 'Show Plane';
+            updatePlane();
+        }
+
+        function toggleWireframe() {
+            wireframeMode = !wireframeMode;
+            const btn = document.getElementById('toggleWireframe');
+            btn.textContent = wireframeMode ? 'Solid' : 'Wireframe';
+            
+            vesselGroup.children.forEach(child => {
+                if (child.material) {
+                    child.material.wireframe = wireframeMode;
+                }
+            });
+        }
+
+        function resetCamera() {
+            camera.position.set(80, 60, 120);
+            panTarget.set(0, 0, 0);
+            camera.lookAt(panTarget);
+        }
+
+        function exportSystem() {
+            const data = {
+                vessels: vessels.map(v => ({
+                    start: v.start.toArray(),
+                    end: v.end.toArray(),
+                    radius: v.radius,
+                    generation: v.generation
+                })),
+                parameters: getParameters(),
+                stats: {
+                    vesselCount: vessels.length,
+                    totalVolume: vessels.reduce((sum, v) => sum + v.getVolume(), 0),
+                    totalSurfaceArea: vessels.reduce((sum, v) => sum + v.getSurfaceArea(), 0)
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vascular_system_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportCrossSection() {
+            // Calculate intersections first
+            const intersections = calculateIntersections();
+            
+            if (intersections.length === 0) {
+                alert('No cross-sections found to export. Please adjust the plane position or orientation.');
+                return;
+            }
+
+            // Create high-resolution canvas for export
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            // High resolution settings for export
+            const exportWidth = 2048;  // High resolution
+            const exportHeight = 2048;
+            exportCanvas.width = exportWidth;
+            exportCanvas.height = exportHeight;
+            
+            // Clear with white background for better print quality
+            exportCtx.fillStyle = '#ffffff';
+            exportCtx.fillRect(0, 0, exportWidth, exportHeight);
+            
+            // Create basis vectors for the plane
+            const u = createPerpendicularVector(planeNormal);
+            const v = new THREE.Vector3().crossVectors(planeNormal, u);
+            
+            // Project points and find bounds
+            const projectedPoints = intersections.map(int => {
+                const relativePos = int.point.clone().sub(
+                    planeNormal.clone().multiplyScalar(planePosition)
+                );
+                return {
+                    x: relativePos.dot(u),
+                    y: relativePos.dot(v),
+                    intersection: int
+                };
+            });
+            
+            // Find bounds for scaling
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            projectedPoints.forEach(p => {
+                const r = Math.max(p.intersection.majorAxis, p.intersection.minorAxis);
+                minX = Math.min(minX, p.x - r);
+                maxX = Math.max(maxX, p.x + r);
+                minY = Math.min(minY, p.y - r);
+                maxY = Math.max(maxY, p.y + r);
+            });
+            
+            const rangeX = maxX - minX;
+            const rangeY = maxY - minY;
+            const range = Math.max(rangeX, rangeY) * 1.2;
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const scale = Math.min(exportWidth, exportHeight) * 0.8 / range;
+            
+            // Draw high-quality grid
+            exportCtx.strokeStyle = '#e0e0e0';
+            exportCtx.lineWidth = 1;
+            const gridSize = 30;
+            for (let i = -gridSize; i <= gridSize; i++) {
+                const x = exportWidth/2 + i * scale * range / gridSize;
+                const y = exportHeight/2 + i * scale * range / gridSize;
+                
+                if (x >= 0 && x <= exportWidth) {
+                    exportCtx.beginPath();
+                    exportCtx.moveTo(x, 0);
+                    exportCtx.lineTo(x, exportHeight);
+                    exportCtx.stroke();
+                }
+                
+                if (y >= 0 && y <= exportHeight) {
+                    exportCtx.beginPath();
+                    exportCtx.moveTo(0, y);
+                    exportCtx.lineTo(exportWidth, y);
+                    exportCtx.stroke();
+                }
+            }
+            
+            // Draw title and metadata
+            exportCtx.fillStyle = '#333333';
+            exportCtx.font = 'bold 36px Arial, sans-serif';
+            exportCtx.textAlign = 'center';
+            exportCtx.fillText('Vascular Cross-Section Analysis', exportWidth/2, 50);
+            
+            exportCtx.font = '24px Arial, sans-serif';
+            exportCtx.fillText(`Plane Orientation: ${currentPlaneOrientation.toUpperCase()} | Position: ${planePosition.toFixed(1)}mm`, exportWidth/2, 90);
+            exportCtx.fillText(`${intersections.length} vessels intersected | Generated: ${new Date().toLocaleDateString()}`, exportWidth/2, 120);
+            
+            // Draw high-quality intersections
+            projectedPoints.forEach((p, index) => {
+                const screenX = exportWidth/2 + (p.x - centerX) * scale;
+                const screenY = exportHeight/2 - (p.y - centerY) * scale;
+                
+                const majorR = p.intersection.majorAxis * scale;
+                const minorR = p.intersection.minorAxis * scale;
+                
+                // High-quality color scheme
+                const hue = Math.min(0.15, (p.intersection.vessel.generation / 12) * 0.15);
+                const saturation = 0.9 - p.intersection.vessel.generation * 0.03;
+                const lightness = 0.45 + (p.intersection.vessel.radius * 0.05);
+                const color = `hsl(${hue * 360}, ${saturation * 100}%, ${lightness * 100}%)`;
+                
+                exportCtx.save();
+                exportCtx.translate(screenX, screenY);
+                exportCtx.rotate(p.intersection.angle);
+                
+                // High-quality shadow
+                exportCtx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                exportCtx.shadowBlur = 6;
+                exportCtx.shadowOffsetX = 2;
+                exportCtx.shadowOffsetY = 2;
+                
+                // Gradient fill for depth
+                const ellipseGradient = exportCtx.createRadialGradient(0, 0, 0, 0, 0, Math.max(majorR, minorR));
+                ellipseGradient.addColorStop(0, color.replace(')', ', 0.9)').replace('hsl', 'hsla'));
+                ellipseGradient.addColorStop(0.7, color.replace(')', ', 0.6)').replace('hsl', 'hsla'));
+                ellipseGradient.addColorStop(1, color.replace(')', ', 0.3)').replace('hsl', 'hsla'));
+                
+                exportCtx.fillStyle = ellipseGradient;
+                exportCtx.beginPath();
+                exportCtx.ellipse(0, 0, majorR, minorR, 0, 0, Math.PI * 2);
+                exportCtx.fill();
+                
+                // High-quality stroke
+                exportCtx.shadowColor = 'transparent';
+                exportCtx.strokeStyle = color;
+                exportCtx.lineWidth = Math.max(2, p.intersection.vessel.radius * 1.5);
+                exportCtx.stroke();
+                
+                exportCtx.restore();
+                
+                // High-quality labels
+                if (p.intersection.vessel.radius > 0.2) {
+                    exportCtx.fillStyle = '#000000';
+                    exportCtx.font = `bold ${Math.max(16, Math.min(24, p.intersection.vessel.radius * 12))}px Arial, sans-serif`;
+                    exportCtx.textAlign = 'center';
+                    exportCtx.strokeStyle = 'white';
+                    exportCtx.lineWidth = 4;
+                    const label = `G${p.intersection.vessel.generation}`;
+                    const labelY = screenY - Math.max(majorR, minorR) - 12;
+                    
+                    // Text outline
+                    exportCtx.strokeText(label, screenX, labelY);
+                    exportCtx.fillText(label, screenX, labelY);
+                }
+            });
+            
+            // Enhanced scale bar
+            const scaleBarLength = 20 * scale; // 20mm scale bar
+            const scaleBarY = exportHeight - 100;
+            const scaleBarX = 60;
+            
+            // Scale bar background
+            exportCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            exportCtx.fillRect(scaleBarX - 20, scaleBarY - 30, scaleBarLength + 40, 60);
+            exportCtx.strokeStyle = '#cccccc';
+            exportCtx.lineWidth = 2;
+            exportCtx.strokeRect(scaleBarX - 20, scaleBarY - 30, scaleBarLength + 40, 60);
+            
+            // Scale bar
+            exportCtx.fillStyle = '#333333';
+            exportCtx.fillRect(scaleBarX, scaleBarY, scaleBarLength, 6);
+            
+            // Scale text
+            exportCtx.fillStyle = '#333333';
+            exportCtx.font = 'bold 20px Arial, sans-serif';
+            exportCtx.textAlign = 'left';
+            exportCtx.fillText('20mm', scaleBarX, scaleBarY + 25);
+            
+            // Legend
+            const legendX = exportWidth - 300;
+            const legendY = 150;
+            
+            exportCtx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            exportCtx.fillRect(legendX - 20, legendY - 20, 280, 200);
+            exportCtx.strokeStyle = '#cccccc';
+            exportCtx.lineWidth = 2;
+            exportCtx.strokeRect(legendX - 20, legendY - 20, 280, 200);
+            
+            exportCtx.fillStyle = '#333333';
+            exportCtx.font = 'bold 20px Arial, sans-serif';
+            exportCtx.textAlign = 'left';
+            exportCtx.fillText('Generation Legend:', legendX, legendY);
+            
+            // Draw legend items
+            const generations = [...new Set(intersections.map(i => i.vessel.generation))].sort((a, b) => a - b);
+            generations.slice(0, 6).forEach((gen, idx) => {
+                const y = legendY + 30 + idx * 25;
+                const hue = Math.min(0.15, (gen / 12) * 0.15);
+                const color = `hsl(${hue * 360}, 80%, 50%)`;
+                
+                exportCtx.fillStyle = color;
+                exportCtx.beginPath();
+                exportCtx.arc(legendX + 15, y - 5, 8, 0, Math.PI * 2);
+                exportCtx.fill();
+                
+                exportCtx.fillStyle = '#333333';
+                exportCtx.font = '16px Arial, sans-serif';
+                exportCtx.fillText(`Generation ${gen}`, legendX + 35, y);
+            });
+            
+            // Export high-resolution PNG
+            const imageUrl = exportCanvas.toDataURL('image/png', 1.0);
+            const imageLink = document.createElement('a');
+            imageLink.href = imageUrl;
+            imageLink.download = `vascular_cross_section_${currentPlaneOrientation}_${Date.now()}.png`;
+            imageLink.click();
+
+            // Export detailed CSV data
+            const csvHeader = [
+                'Vessel ID',
+                'Generation',
+                'Vessel Radius (mm)',
+                'Minor Axis Length (mm)',
+                'Major Axis Length (mm)',
+                'Cross Section Area (mm²)',
+                'Intersection Point X (mm)',
+                'Intersection Point Y (mm)', 
+                'Intersection Point Z (mm)',
+                'Plane Angle (degrees)',
+                'Ellipse Rotation (degrees)',
+                'Vessel Length (mm)',
+                'Vessel Volume (mm³)',
+                'Vessel Surface Area (mm²)'
+            ];
+
+            const csvRows = intersections.map(intersection => {
+                const vessel = intersection.vessel;
+                const crossSectionArea = Math.PI * intersection.majorAxis * intersection.minorAxis;
+                const planeAngle = Math.acos(intersection.cosAngle) * 180 / Math.PI;
+                const ellipseRotation = intersection.angle * 180 / Math.PI;
+                
+                return [
+                    vessel.id,
+                    vessel.generation,
+                    vessel.radius.toFixed(4),
+                    intersection.minorAxis.toFixed(4),
+                    intersection.majorAxis.toFixed(4),
+                    crossSectionArea.toFixed(4),
+                    intersection.point.x.toFixed(4),
+                    intersection.point.y.toFixed(4),
+                    intersection.point.z.toFixed(4),
+                    planeAngle.toFixed(2),
+                    ellipseRotation.toFixed(2),
+                    vessel.getLength().toFixed(4),
+                    vessel.getVolume().toFixed(4),
+                    vessel.getSurfaceArea().toFixed(4)
+                ];
+            });
+
+            // Create enhanced CSV content
+            const csvContent = [csvHeader, ...csvRows]
+                .map(row => row.join(','))
+                .join('\n');
+
+            // Download CSV file
+            const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+            const csvUrl = URL.createObjectURL(csvBlob);
+            const csvLink = document.createElement('a');
+            csvLink.href = csvUrl;
+            csvLink.download = `vascular_cross_section_data_${currentPlaneOrientation}_${Date.now()}.csv`;
+            csvLink.click();
+            URL.revokeObjectURL(csvUrl);
+
+            // Export summary JSON
+            const summaryData = {
+                metadata: {
+                    timestamp: new Date().toISOString(),
+                    planeOrientation: currentPlaneOrientation,
+                    planePosition: planePosition,
+                    planeRotationX: parseFloat(document.getElementById('planeRotX').value),
+                    planeRotationY: parseFloat(document.getElementById('planeRotY').value),
+                    totalIntersections: intersections.length
+                },
+                statistics: {
+                    totalCrossSectionArea: intersections.reduce((sum, i) => sum + Math.PI * i.majorAxis * i.minorAxis, 0),
+                    averageVesselRadius: intersections.reduce((sum, i) => sum + i.vessel.radius, 0) / intersections.length,
+                    generationDistribution: generations.reduce((acc, gen) => {
+                        acc[`generation_${gen}`] = intersections.filter(i => i.vessel.generation === gen).length;
+                        return acc;
+                    }, {})
+                },
+                intersections: intersections.map(i => ({
+                    vesselId: i.vessel.id,
+                    generation: i.vessel.generation,
+                    radius: i.vessel.radius,
+                    crossSectionArea: Math.PI * i.majorAxis * i.minorAxis,
+                    position: {
+                        x: i.point.x,
+                        y: i.point.y,
+                        z: i.point.z
+                    }
+                }))
+            };
+
+            const jsonBlob = new Blob([JSON.stringify(summaryData, null, 2)], { type: 'application/json' });
+            const jsonUrl = URL.createObjectURL(jsonBlob);
+            const jsonLink = document.createElement('a');
+            jsonLink.href = jsonUrl;
+            jsonLink.download = `vascular_cross_section_summary_${currentPlaneOrientation}_${Date.now()}.json`;
+            jsonLink.click();
+            URL.revokeObjectURL(jsonUrl);
+
+            // Show enhanced export summary
+            const totalArea = intersections.reduce((sum, i) => sum + Math.PI * i.majorAxis * i.minorAxis, 0);
+            const avgRadius = intersections.reduce((sum, i) => sum + i.vessel.radius, 0) / intersections.length;
+            
+            const summary = `High-Quality Export Completed Successfully!
+
+Files Generated:
+• High-resolution cross-section image (2048x2048 PNG)
+• Detailed vessel intersection data (CSV)
+• Analysis summary with metadata (JSON)
+
+Analysis Summary:
+• ${intersections.length} vessels intersected
+• Plane: ${currentPlaneOrientation.toUpperCase()} at ${planePosition.toFixed(2)}mm
+• Total cross-sectional area: ${totalArea.toFixed(2)}mm²
+• Average vessel radius: ${avgRadius.toFixed(3)}mm
+• Generation range: ${Math.min(...generations)} - ${Math.max(...generations)}
+
+Export Resolution: 2048x2048 pixels (High-DPI ready)
+Color Depth: 24-bit RGB + Alpha
+Grid Resolution: Enhanced 30-line grid`;
+            
+            alert(summary);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            
+            // Load default preset
+            loadPreset('coronary');
+            
+            // Generate initial system
+            setTimeout(() => {
+                generateVascularSystem();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
